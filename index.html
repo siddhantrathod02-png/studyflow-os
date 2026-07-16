@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyFLOW OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        :root {
+            --text-main: #1d1d1f;
+            --text-muted: #515154;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            --accent: #3b82f6;
+            --bg-color: #fdfbfb;
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Outfit', -apple-system, sans-serif;
+            margin: 0; padding: 0; min-height: 100vh; color: var(--text-main);
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 80% 0%, rgba(144, 137, 252, 0.35) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, rgba(255, 128, 181, 0.35) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(118, 219, 208, 0.35) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(255, 203, 116, 0.35) 0px, transparent 50%);
+            background-attachment: fixed; overflow-x: hidden;
+        }
+
+        /* --- AUTHENTICATION SCREEN --- */
+        #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(253,251,251,0.9); backdrop-filter: blur(15px); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .auth-card { background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 40px; border-radius: 28px; width: 90%; max-width: 400px; box-shadow: 0 25px 60px rgba(0,0,0,0.1); text-align: center; }
+        .auth-title { font-size: 2.5rem; font-weight: 700; margin-bottom: 5px; background: linear-gradient(135deg, #1d1d1f, #515154); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px;}
+        .auth-subtitle { color: var(--text-muted); margin-bottom: 30px; font-size: 1rem; }
+        .auth-input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 2px solid #e4e4e7; font-family: 'Outfit'; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+        .auth-input:focus { border-color: var(--accent); }
+        .auth-btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--text-main); color: white; font-family: 'Outfit'; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: transform 0.2s; margin-bottom: 15px;}
+        .auth-btn:hover { transform: translateY(-2px); }
+        .auth-switch { color: var(--accent); font-weight: 600; cursor: pointer; font-size: 0.95rem; }
+        .auth-error { color: #ef4444; font-size: 0.9rem; margin-bottom: 15px; font-weight: 600; min-height: 20px;}
+
+        /* --- MAIN APP UI --- */
+        #app-screen { display: none; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px 4vw; position: relative; }
+        
+        .master-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .brand-title { font-size: 2.2rem; font-weight: 700; margin: 0; letter-spacing: -1px; background: linear-gradient(135deg, #1d1d1f, #515154); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+        .cloud-status { font-size: 0.8rem; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 1px; padding: 8px 16px; background: var(--glass-bg); border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+        .logout-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 8px 16px; border-radius: 20px; font-family: 'Outfit'; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; text-transform: uppercase;}
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.2); }
+
+        .breadcrumbs-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+        .breadcrumbs { font-size: 1rem; font-weight: 600; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; flex: 1; }
+        .crumb { cursor: pointer; padding: 8px 16px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border); transition: all 0.2s; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .crumb:hover { background: rgba(255,255,255,0.9); transform: translateY(-1px); }
+        .crumb.active { background: var(--text-main); color: white; border-color: var(--text-main); }
+        .crumb-separator { color: var(--text-muted); font-weight: 300; }
+
+        #folder-view, #checklist-view, #note-view { display: none; animation: fadeIn 0.3s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .drag-active { border: 3px dashed var(--accent) !important; background: rgba(59, 130, 246, 0.1) !important; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; padding: 10px; border-radius: 24px; transition: all 0.3s;}
+        .card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 25px; cursor: pointer; box-shadow: var(--glass-shadow); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; display: flex; flex-direction: column; min-height: 160px; overflow: hidden; }
+        .card:hover { transform: translateY(-5px) scale(1.02); background: rgba(255, 255, 255, 0.65); box-shadow: 0 15px 45px rgba(0,0,0,0.1); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2; }
+        .card-icon { font-size: 2.5rem; }
+        .card-type-badge { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); background: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 10px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card-title { font-size: 1.3rem; font-weight: 700; line-height: 1.3; margin-top: auto; padding-top: 20px; z-index: 2;}
+        
+        .progress-wrapper { margin-top: 15px; z-index: 2;}
+        .progress-stats { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+        .progress-track { width: 100%; height: 6px; background: rgba(0, 0, 0, 0.1); border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 10px; transition: width 0.6s ease; background-color: var(--accent); }
+
+        .card-image-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 0; transition: opacity 0.3s; }
+        .card:hover .card-image-bg { opacity: 0.8; }
+        .card-actions { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; opacity: 0; transition: opacity 0.2s; z-index: 3;}
+        .card:hover .card-actions { opacity: 1; }
+        .mini-btn { background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: all 0.2s; font-size: 1.1rem; }
+        .mini-btn:hover { background: white; transform: scale(1.1); }
+        
+        .task-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; max-width: 800px; }
+        .task-item { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; font-size: 1.1rem; font-weight: 500; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .task-content { display: flex; align-items: center; flex: 1; }
+        .task-item input[type="checkbox"] { appearance: none; width: 26px; height: 26px; border: 2px solid #a1a1aa; border-radius: 50%; margin-right: 16px; cursor: pointer; position: relative; flex-shrink: 0; background: rgba(255,255,255,0.7); transition: all 0.2s;}
+        .task-item input[type="checkbox"]:checked { background-color: #10b981; border-color: #10b981; }
+        .task-item input[type="checkbox"]:checked::after { content: '✓'; position: absolute; color: white; font-size: 16px; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .task-item.completed { opacity: 0.6; background: transparent; }
+        .task-item.completed .task-content span { text-decoration: line-through; color: var(--text-muted); }
+        .task-actions { display: flex; gap: 8px; margin-left: 10px; }
+        
+        .note-container { max-width: 1000px; margin: 0 auto; }
+        .note-editor { width: 100%; min-height: 70vh; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 35px; font-family: 'Outfit', sans-serif; font-size: 1.15rem; line-height: 1.7; color: var(--text-main); resize: vertical; outline: none; box-shadow: inset 0 2px 20px rgba(0,0,0,0.03); transition: background 0.3s; }
+        .note-editor:focus { background: rgba(255,255,255,0.8); }
+        .save-indicator { text-align: right; font-size: 0.9rem; color: var(--text-muted); margin-top: 15px; font-style: italic; font-weight: 600; }
+
+        .controls { display: flex; gap: 15px; margin-top: 30px; max-width: 800px; }
+        .action-btn { flex: 1; padding: 18px; border: none; border-radius: 20px; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--glass-shadow); display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .action-btn.add { background: var(--text-main); color: white; }
+        .action-btn.add:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
+        .action-btn.scan { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; }
+        
+        .empty-state { text-align: center; color: var(--text-muted); padding: 50px 20px; font-style: italic; background: var(--glass-bg); border-radius: 20px; border: 2px dashed var(--glass-border); font-size: 1.1rem; grid-column: 1 / -1; pointer-events: none;}
+        #ocr-upload, #image-upload { display: none; }
+        
+        #custom-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: var(--bg-color); padding: 35px; border-radius: 28px; width: 90%; max-width: 450px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); border: 1px solid var(--glass-border); }
+        .modal-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 25px; margin-top:0; color: var(--text-main);}
+        .modal-input { width: 100%; padding: 15px 18px; border: 2px solid #e4e4e7; border-radius: 14px; font-family: 'Outfit'; font-size: 1.1rem; margin-bottom: 20px; outline: none; transition: border-color 0.2s; background: white;}
+        .modal-input:focus { border-color: var(--accent); }
+        .modal-btns { display: flex; gap: 15px; }
+        .modal-btn { flex: 1; padding: 15px; border-radius: 14px; border: none; font-family: 'Outfit'; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; }
+        .modal-btn.cancel { background: #e4e4e7; color: var(--text-main); }
+        .modal-btn.confirm { background: var(--text-main); color: white; }
+    </style>
+</head>
+<body>
+
+<div id="auth-screen">
+    <div class="auth-card">
+        <h1 class="auth-title">StudyFLOW</h1>
+        <p class="auth-subtitle" id="auth-mode-text">Login to your personal workspace</p>
+        
+        <div id="auth-error" class="auth-error"></div>
+        
+        <input type="email" id="auth-email" class="auth-input" placeholder="Email address">
+        <input type="password" id="auth-password" class="auth-input" placeholder="Password">
+        
+        <button class="auth-btn" id="auth-action-btn" onclick="window.handleAuth()">Login</button>
+        
+        <p class="auth-switch" onclick="window.toggleAuthMode()" id="auth-switch-text">Need an account? Sign up</p>
+    </div>
+</div>
+
+<div id="app-screen" class="container">
+    <div class="master-header">
+        <h1 class="brand-title">StudyFLOW</h1>
+        <div class="header-controls">
+            <div id="cloud-indicator" class="cloud-status offline">Connecting...</div>
+            <button class="logout-btn" onclick="window.logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="breadcrumbs-wrapper">
+        <div class="breadcrumbs" id="breadcrumbs"></div>
+    </div>
+
+    <div id="folder-view">
+        <div class="grid" id="folder-grid"></div>
+        <div class="controls" id="folder-controls" style="max-width: 100%; display: flex; gap: 15px; justify-content: center;">
+            <button class="action-btn add" style="max-width: 300px;" onclick="window.promptNewItem()">+ Create Element</button>
+            <button class="action-btn" style="max-width: 300px; background: white;" onclick="document.getElementById('image-upload').click()">🖼️ Upload Image</button>
+            <input type="file" id="image-upload" accept="image/*" onchange="window.handleImageUpload(event)">
+        </div>
+    </div>
+
+    <div id="checklist-view">
+        <ul id="todo-list" class="task-list" style="margin-bottom: 25px;"></ul>
+        <h3 id="completed-title" style="font-size:1.1rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom: 15px; display: none;">Conquered</h3>
+        <ul id="completed-list" class="task-list"></ul>
+        <div class="controls">
+            <button class="action-btn add" onclick="window.addChecklistItem()">+ Add Topic</button>
+            <button class="action-btn scan" id="scan-btn" onclick="document.getElementById('ocr-upload').click()">✧ Scan Document</button>
+            <input type="file" id="ocr-upload" accept="image/*" onchange="window.processOCR(event)">
+        </div>
+    </div>
+
+    <div id="note-view">
+        <div class="note-container">
+            <textarea id="note-editor" class="note-editor" placeholder="Start typing..."></textarea>
+            <div id="save-indicator" class="save-indicator">All changes saved to cloud</div>
+        </div>
+    </div>
+</div>
+
+<div id="custom-modal">
+    <div class="modal-content">
+        <h3 class="modal-title" id="modal-title">Create Element</h3>
+        
+        <select id="modal-type" class="modal-input" style="cursor:pointer;" onchange="window.handleTypeChange()">
+            <option value="folder">📁 Infinite Folder</option>
+            <option value="checklist">☑️ Syllabus / Checklist</option>
+            <option value="note">📝 Text Document</option>
+            <option value="link">🔗 Google Drive / Web Link</option>
+        </select>
+
+        <input type="text" id="modal-icon" class="modal-input" placeholder="Emoji Icon (e.g., 🚀)" maxlength="5">
+        <input type="text" id="modal-name" class="modal-input" placeholder="Name (e.g., Modern History)">
+        <input type="url" id="modal-url" class="modal-input" placeholder="Paste link here (https://...)" style="display:none;">
+        
+        <div class="modal-btns">
+            <button class="modal-btn cancel" onclick="window.closeModal()">Cancel</button>
+            <button class="modal-btn confirm" id="modal-confirm-btn">Save</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    // 🔴 🔴 🔴 PASTE YOUR EXACT FIREBASE CONFIG KEYS HERE 🔴 🔴 🔴
+   const firebaseConfig = {
+  apiKey: "AIzaSyDE-iAfrqFsOJMdEYpFsP2M0wdoACq9GOA",
+  authDomain: "studyflow-e9fa2.firebaseapp.com",
+  projectId: "studyflow-e9fa2",
+  storageBucket: "studyflow-e9fa2.firebasestorage.app",
+  messagingSenderId: "482314535723",
+  appId: "1:482314535723:web:51a6f68aff5b598d71fb6e",
+  measurementId: "G-2NERC3XGXK"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    const auth = getAuth(app);
+    
+    let docRef = null; // Will be set once user logs in
+    let currentUser = null;
+    let unsubscribeSnapshot = null;
+
+    let tree = [];
+    let currentPath = []; 
+    let saveTimeout = null;
+
+    // --- AUTHENTICATION LOGIC ---
+    let isSignupMode = false;
+
+    window.toggleAuthMode = () => {
+        isSignupMode = !isSignupMode;
+        document.getElementById('auth-mode-text').innerText = isSignupMode ? "Create a new workspace" : "Login to your personal workspace";
+        document.getElementById('auth-action-btn').innerText = isSignupMode ? "Sign Up" : "Login";
+        document.getElementById('auth-switch-text').innerText = isSignupMode ? "Already have an account? Login" : "Need an account? Sign up";
+        document.getElementById('auth-error').innerText = "";
+    };
+
+    window.handleAuth = async () => {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        const errorDiv = document.getElementById('auth-error');
+        
+        if(!email || !password) {
+            errorDiv.innerText = "Please enter both email and password.";
+            return;
+        }
+
+        try {
+            if (isSignupMode) {
+                await createUserWithEmailAndPassword(auth, email, password);
+            } else {
+                await signInWithEmailAndPassword(auth, email, password);
+            }
+        } catch (error) {
+            errorDiv.innerText = error.message.replace("Firebase: ", "");
+        }
+    };
+
+    window.logout = async () => {
+        await signOut(auth);
+    };
+
+    // Listen for Login/Logout state changes
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // Logged In
+            currentUser = user;
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            
+            // Set their private database reference
+            docRef = doc(db, "users", currentUser.uid);
+            initCloud();
+        } else {
+            // Logged Out
+            currentUser = null;
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('auth-email').value = "";
+            document.getElementById('auth-password').value = "";
+            
+            if(unsubscribeSnapshot) unsubscribeSnapshot();
+            tree = [];
+            currentPath = [];
+        }
+    });
+
+    // --- OS DATA LOGIC ---
+    async function initCloud() {
+        try {
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) {
+                // Generate a fresh starter environment for a new user
+                tree = [
+                    { id: generateId(), type: "folder", title: "My Workspace", icon: "🚀", children: [] },
+                    { id: generateId(), type: "note", title: "Read Me", icon: "📝", content: "Welcome to your personal StudyFLOW OS." }
+                ];
+                await setDoc(docRef, { tree });
+            } else {
+                tree = docSnap.data().tree;
+            }
+
+            document.getElementById('cloud-indicator').innerText = '☁️ LIVE CLOUD SYNC';
+            document.getElementById('cloud-indicator').classList.remove('offline');
+            render();
+
+            unsubscribeSnapshot = onSnapshot(docRef, (snapshot) => {
+                if (snapshot.exists() && document.activeElement !== document.getElementById('note-editor')) {
+                    tree = snapshot.data().tree;
+                    render(); 
+                }
+            });
+        } catch (error) {
+            console.error("Firebase error:", error);
+            document.getElementById('cloud-indicator').innerText = '⚠️ OFFLINE MODE - Check DB Rules';
+            document.getElementById('cloud-indicator').classList.add('offline');
+        }
+    }
+
+    async function saveToCloud() {
+        if(!docRef) return;
+        const ind = document.getElementById('save-indicator');
+        if(ind) ind.innerText = "Syncing...";
+        try { await setDoc(docRef, { tree }); if(ind) ind.innerText = "All changes saved"; } 
+        catch (e) { console.error(e); }
+    }
+
+    function generateId() { return Math.random().toString(36).substr(2, 9); }
+
+    function resolveCurrentContext() {
+        if (currentPath.length === 0) return { children: tree, node: null };
+        let currentArray = tree;
+        let targetNode = null;
+        for (let id of currentPath) {
+            targetNode = currentArray.find(n => n.id === id);
+            if (!targetNode) { currentPath = []; return { children: tree, node: null }; }
+            if (targetNode.type === "folder") currentArray = targetNode.children || [];
+        }
+        return { children: currentArray, node: targetNode };
+    }
+
+    function getProgress(node) {
+        let total = 0; let done = 0;
+        if (node.type === 'checklist') {
+            total += (node.tasks || []).length; done += (node.tasks || []).filter(t => t.done).length;
+        } else if (node.type === 'folder') {
+            (node.children || []).forEach(child => {
+                const p = getProgress(child); total += p.total; done += p.done;
+            });
+        }
+        return { total, done };
+    }
+
+    // --- UI RENDERING ---
+    function render() {
+        renderBreadcrumbs();
+        const ctx = resolveCurrentContext();
+        
+        document.getElementById('folder-view').style.display = 'none'; 
+        document.getElementById('checklist-view').style.display = 'none'; 
+        document.getElementById('note-view').style.display = 'none';
+
+        if (!ctx.node || ctx.node.type === "folder") {
+            document.getElementById('folder-view').style.display = 'block'; renderFolder(ctx.children);
+        } else if (ctx.node.type === "checklist") {
+            document.getElementById('checklist-view').style.display = 'block'; renderChecklist(ctx.node);
+        } else if (ctx.node.type === "note") {
+            document.getElementById('note-view').style.display = 'block'; renderNote(ctx.node);
+        }
+    }
+
+    function renderBreadcrumbs() {
+        const bc = document.getElementById('breadcrumbs'); bc.innerHTML = '';
+        const home = document.createElement('div');
+        home.className = `crumb ${currentPath.length === 0 ? 'active' : ''}`;
+        home.innerHTML = '🏠 OS Directory'; home.onclick = () => { currentPath = []; render(); };
+        bc.appendChild(home);
+
+        let currentArray = tree; let cumPath = [];
+        for (let id of currentPath) {
+            const sep = document.createElement('span'); sep.className = 'crumb-separator'; sep.innerText = '/'; bc.appendChild(sep);
+            const node = currentArray.find(n => n.id === id);
+            if(!node) break;
+            
+            cumPath.push(id); const cp = [...cumPath]; 
+            const crumb = document.createElement('div');
+            crumb.className = `crumb ${cumPath.length === currentPath.length ? 'active' : ''}`;
+            crumb.innerHTML = `${node.icon} ${node.title}`;
+            crumb.onclick = () => { currentPath = cp; render(); };
+            
+            bc.appendChild(crumb);
+            if (node.type === "folder") currentArray = node.children || [];
+        }
+    }
+
+    function renderFolder(children) {
+        const grid = document.getElementById('folder-grid'); grid.innerHTML = '';
+        if (!children || children.length === 0) {
+            grid.innerHTML = '<div class="empty-state">This environment is empty. Create elements or drag-and-drop images here.</div>'; return;
+        }
+
+        children.forEach(item => {
+            const card = document.createElement('div'); card.className = 'card';
+            let badge = item.type; let imgHTML = ''; let progressHTML = '';
+
+            if (item.type === 'folder' || item.type === 'checklist') {
+                const prog = getProgress(item);
+                if(prog.total > 0) {
+                    const pct = Math.round((prog.done / prog.total) * 100);
+                    progressHTML = `<div class="progress-wrapper"><div class="progress-stats"><span>${prog.done}/${prog.total} tasks</span><span>${pct}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div></div>`;
+                }
+            }
+            if (item.type === 'image') { imgHTML = `<img src="${item.url}" class="card-image-bg">`; badge = 'Image'; }
+            if (item.type === 'link') badge = 'Drive Link';
+
+            card.innerHTML = `
+                ${imgHTML}
+                <div class="card-header"><div class="card-icon">${item.icon}</div><div class="card-type-badge">${badge}</div></div>
+                <div class="card-title">${item.title}</div>${progressHTML}
+                <div class="card-actions">
+                    <button class="mini-btn" onclick="event.stopPropagation(); window.openEditModal('${item.id}')">✏️</button>
+                    <button class="mini-btn" style="color:#ef4444;" onclick="event.stopPropagation(); window.deleteNode('${item.id}')">🗑️</button>
+                </div>`;
+            
+            card.onclick = () => { 
+                if(item.type === 'link' || item.type === 'image') window.open(item.url, '_blank'); 
+                else { currentPath.push(item.id); render(); }
+            };
+            grid.appendChild(card);
+        });
+    }
+
+    function renderChecklist(node) {
+        const todoList = document.getElementById('todo-list'); const completedList = document.getElementById('completed-list'); const compTitle = document.getElementById('completed-title');
+        todoList.innerHTML = ''; completedList.innerHTML = '';
+        const tasks = node.tasks || []; const todos = tasks.filter(t => !t.done); const doneTasks = tasks.filter(t => t.done);
+
+        if (tasks.length === 0) todoList.innerHTML = '<div class="empty-state">Empty Checklist.</div>';
+        else todos.forEach(task => todoList.appendChild(createTaskElement(task, node)));
+
+        if (doneTasks.length === 0) compTitle.style.display = 'none';
+        else { compTitle.style.display = 'block'; doneTasks.forEach(task => completedList.appendChild(createTaskElement(task, node))); }
+    }
+
+    function createTaskElement(task, parentNode) {
+        const li = document.createElement('li'); li.className = `task-item ${task.done ? 'completed' : ''}`;
+        const content = document.createElement('div'); content.className = 'task-content';
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = task.done;
+        cb.onchange = async () => { task.done = !task.done; render(); await saveToCloud(); };
+        const span = document.createElement('span'); span.innerText = task.text;
+        content.appendChild(cb); content.appendChild(span);
+
+        const actions = document.createElement('div'); actions.className = 'task-actions';
+        const del = document.createElement('button'); del.className = 'mini-btn'; del.innerHTML = '🗑️'; del.style.color = '#ef4444';
+        del.onclick = async () => { parentNode.tasks = parentNode.tasks.filter(t => t.id !== task.id); render(); await saveToCloud(); };
+        actions.appendChild(del); li.appendChild(content); li.appendChild(actions); return li;
+    }
+
+    function renderNote(node) {
+        const editor = document.getElementById('note-editor');
+        if (document.activeElement !== editor) editor.value = node.content || "";
+        editor.oninput = () => {
+            node.content = editor.value; document.getElementById('save-indicator').innerText = "Typing...";
+            clearTimeout(saveTimeout); saveTimeout = setTimeout(async () => { await saveToCloud(); }, 1000); 
+        };
+    }
+
+    // --- MODALS & ACTIONS ---
+    window.handleTypeChange = () => {
+        const type = document.getElementById('modal-type').value;
+        document.getElementById('modal-url').style.display = (type === 'link') ? 'block' : 'none';
+    }
+
+    window.promptNewItem = () => {
+        document.getElementById('modal-title').innerText = "Create Element"; document.getElementById('modal-type').style.display = 'block'; document.getElementById('modal-type').value = 'folder'; document.getElementById('modal-icon').value = ''; document.getElementById('modal-name').value = ''; document.getElementById('modal-url').value = ''; window.handleTypeChange();
+        
+        document.getElementById('modal-confirm-btn').onclick = async () => {
+            const type = document.getElementById('modal-type').value;
+            const icon = document.getElementById('modal-icon').value || (type==='folder'?'📁':type==='link'?'🔗':'📝');
+            const title = document.getElementById('modal-name').value.trim() || "Untitled";
+            
+            const newNode = { id: generateId(), type, title, icon };
+            if (type === "folder") newNode.children = []; if (type === "checklist") newNode.tasks = []; if (type === "note") newNode.content = ""; if (type === "link") newNode.url = document.getElementById('modal-url').value;
+            
+            resolveCurrentContext().children.push(newNode); window.closeModal(); render(); await saveToCloud();
+        };
+        document.getElementById('custom-modal').style.display = 'flex';
+    };
+
+    window.openEditModal = (nodeId) => {
+        const ctx = resolveCurrentContext(); const node = ctx.children.find(n => n.id === nodeId);
+        document.getElementById('modal-title').innerText = "Edit " + node.title; document.getElementById('modal-type').style.display = 'none'; document.getElementById('modal-icon').value = node.icon; document.getElementById('modal-name').value = node.title;
+        if(node.type === 'link') { document.getElementById('modal-url').style.display = 'block'; document.getElementById('modal-url').value = node.url || ""; } else { document.getElementById('modal-url').style.display = 'none'; }
+        
+        document.getElementById('modal-confirm-btn').onclick = async () => {
+            node.icon = document.getElementById('modal-icon').value || node.icon; node.title = document.getElementById('modal-name').value.trim() || node.title;
+            if(node.type === 'link') node.url = document.getElementById('modal-url').value; window.closeModal(); render(); await saveToCloud();
+        };
+        document.getElementById('custom-modal').style.display = 'flex';
+    };
+
+    window.closeModal = () => document.getElementById('custom-modal').style.display = 'none';
+
+    window.deleteNode = async (nodeId) => {
+        if(confirm("Delete this element permanently?")) {
+            if (currentPath.length === 0) { tree = tree.filter(n => n.id !== nodeId); } 
+            else { const ctx = resolveCurrentContext(); ctx.node.children = ctx.node.children.filter(n => n.id !== nodeId); }
+            render(); await saveToCloud();
+        }
+    };
+
+    window.addChecklistItem = async () => {
+        const text = prompt("Enter topic:");
+        if (text) { const ctx = resolveCurrentContext(); if(!ctx.node.tasks) ctx.node.tasks = []; ctx.node.tasks.push({ id: generateId(), text: text.trim(), done: false }); render(); await saveToCloud(); }
+    };
+
+    window.processOCR = async (event) => {
+        const file = event.target.files[0]; if (!file) return;
+        const btn = document.getElementById('scan-btn'); const orig = btn.innerText; btn.innerText = "⏳ Scanning..."; btn.disabled = true;
+        try {
+            const res = await Tesseract.recognize(file, 'eng'); const lines = res.data.text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+            if (lines.length > 0) {
+                const ctx = resolveCurrentContext(); if(!ctx.node.tasks) ctx.node.tasks = [];
+                lines.forEach(l => ctx.node.tasks.push({ id: generateId(), text: l, done: false }));
+                render(); await saveToCloud(); alert(`Added ${lines.length} topics`);
+            }
+        } catch (e) { alert("Scanner failed."); } 
+        finally { btn.innerText = orig; btn.disabled = false; event.target.value = ''; }
+    };
+
+    async function uploadImageFile(file) {
+        if (!file.type.startsWith('image/') || !currentUser) { alert("Only images allowed."); return; }
+        document.getElementById('cloud-indicator').innerText = '⏳ UPLOADING...';
+        try {
+            const fileRef = ref(storage, `users/${currentUser.uid}/images/${Date.now()}_${file.name}`);
+            await uploadBytesResumable(fileRef, file); const downloadURL = await getDownloadURL(fileRef);
+            const newNode = { id: generateId(), type: 'image', title: file.name, icon: '🖼️', url: downloadURL };
+            resolveCurrentContext().children.push(newNode); render(); await saveToCloud();
+            document.getElementById('cloud-indicator').innerText = '☁️ LIVE CLOUD SYNC';
+        } catch(e) { alert("Upload failed."); document.getElementById('cloud-indicator').innerText = '⚠️ UPLOAD ERROR'; }
+    }
+
+    window.handleImageUpload = (e) => { const file = e.target.files[0]; if (file) uploadImageFile(file); };
+    const gridEl = document.getElementById('folder-grid');
+    gridEl.addEventListener('dragover', (e) => { e.preventDefault(); gridEl.classList.add('drag-active'); });
+    gridEl.addEventListener('dragleave', () => { gridEl.classList.remove('drag-active'); });
+    gridEl.addEventListener('drop', (e) => { e.preventDefault(); gridEl.classList.remove('drag-active'); if (e.dataTransfer.files.length > 0) uploadImageFile(e.dataTransfer.files[0]); });
+
+</script>
+</body>
+</html>
