@@ -202,6 +202,10 @@
     </div>
 </div>
 
+<<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 <
     // 🔴 🔴 🔴 PASTE YOUR EXACT FIREBASE CONFIG KEYS HERE 🔴 🔴 🔴
    const firebaseConfig = {
