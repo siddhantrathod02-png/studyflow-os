@@ -3,20 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyFLOW OS | Master Engine</title>
+    <title>FLOW | Master Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- OCR Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root {
             --text-main: #1d1d1f; --text-muted: #6b7280;
-            --glass-bg: rgba(255, 255, 255, 0.75); --glass-border: rgba(255, 255, 255, 0.8);
-            --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            /* Fluid Glassmorphism Properties */
+            --glass-bg: rgba(255, 255, 255, 0.15); 
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            --blur: blur(30px);
             --accent: #2563eb; --accent-hover: #1d4ed8;
-            --bg-color: #f8fafc;
+            --bg-color: #f0f4f8;
         }
         
         .zen-mode {
             --text-main: #e2e8f0; --text-muted: #94a3b8;
-            --glass-bg: #0f172a; --glass-border: #1e293b;
+            --glass-bg: rgba(15, 23, 42, 0.4); --glass-border: rgba(255, 255, 255, 0.1);
             --bg-color: #020617; 
         }
 
@@ -26,52 +31,63 @@
         #bg-layer {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
             background-color: var(--bg-color);
-            background-image: radial-gradient(at 80% 0%, rgba(144, 137, 252, 0.2) 0px, transparent 50%),
-                              radial-gradient(at 0% 50%, rgba(255, 128, 181, 0.2) 0px, transparent 50%);
+            background-image: radial-gradient(at 80% 0%, rgba(144, 137, 252, 0.3) 0px, transparent 50%),
+                              radial-gradient(at 0% 50%, rgba(255, 128, 181, 0.3) 0px, transparent 50%),
+                              radial-gradient(at 40% 100%, rgba(56, 189, 248, 0.2) 0px, transparent 50%);
             background-size: cover; background-position: center; transition: all 0.5s ease;
         }
         .zen-mode #bg-layer { background-image: none !important; background-color: var(--bg-color) !important; }
 
-        body { font-family: 'Outfit', sans-serif; margin: 0; padding: 0; min-height: 100vh; color: var(--text-main); }
+        body { font-family: 'Outfit', sans-serif; margin: 0; padding: 0; min-height: 100vh; color: var(--text-main); transition: color 0.4s ease;}
+
+        /* Liquid UI Physics (Ripple & Squish) */
+        .action-btn, .mini-btn, .card, .pyq-tab, .health-btn { position: relative; overflow: hidden; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s; }
+        .action-btn:active, .card:active, .pyq-tab:active, .health-btn:active { transform: scale(0.97); }
+        .ripple { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.5); transform: scale(0); animation: ripple-anim 0.6s linear; pointer-events: none; }
+        @keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
 
         .container { max-width: 1400px; margin: 0 auto; padding: 20px 4vw; position: relative; }
+        
+        /* Liquid Glass Panels */
+        .glass-panel { background: var(--glass-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-top: 1px solid rgba(255, 255, 255, 0.6); border-left: 1px solid rgba(255, 255, 255, 0.6); border-radius: 24px; box-shadow: var(--glass-shadow); }
+
         .master-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); flex-wrap: wrap; gap: 15px;}
-        .brand-title { font-size: 2.2rem; font-weight: 700; margin: 0; letter-spacing: -1px; background: linear-gradient(135deg, var(--text-main), var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; cursor: pointer;}
-        .user-welcome { font-size: 0.95rem; color: var(--text-muted); font-weight: 600; margin-top: 5px;}
+        .brand-title { font-size: 2.5rem; font-weight: 800; margin: 0; letter-spacing: -2px; background: linear-gradient(135deg, var(--text-main), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; cursor: pointer;}
+        .user-welcome { font-size: 0.95rem; font-weight: 600; margin-top: 5px; opacity: 0.8;}
         
         .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;}
-        .cloud-status { font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; background: var(--glass-bg); border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+        .cloud-status { font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; background: var(--glass-bg); backdrop-filter: var(--blur); border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
         .cloud-status.offline { color: #ef4444; }
-        .icon-btn-header { background: var(--glass-bg); color: var(--text-main); border: 1px solid var(--glass-border); padding: 8px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: var(--glass-shadow);}
-        .icon-btn-header:hover { transform: scale(1.05); background: var(--text-main); color: white;}
+        .icon-btn-header { background: var(--glass-bg); backdrop-filter: var(--blur); color: var(--text-main); border: 1px solid var(--glass-border); padding: 8px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: var(--glass-shadow);}
+        .icon-btn-header:hover { transform: scale(1.05); background: var(--text-main); color: var(--bg-color);}
         .logout-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 8px 16px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; transition: all 0.2s;}
         .logout-btn:hover { background: #ef4444; color: white; }
         
-        .pomo-widget { display: flex; align-items: center; gap: 8px; background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; box-shadow: var(--glass-shadow); }
+        .pomo-widget { display: flex; align-items: center; gap: 8px; background: var(--glass-bg); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; box-shadow: var(--glass-shadow); }
         .pomo-btn { background: var(--text-main); color: var(--bg-color); border: none; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; cursor: pointer; font-family: 'Outfit'; font-weight: 700;}
         .pomo-settings { cursor: pointer; opacity: 0.5; transition: opacity 0.2s; } .pomo-settings:hover { opacity: 1; }
 
         .breadcrumbs-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
         .breadcrumbs { font-size: 1rem; font-weight: 600; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; flex: 1; }
-        .crumb { cursor: pointer; padding: 8px 16px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border); transition: all 0.2s; display: flex; align-items: center; gap: 6px; box-shadow: var(--glass-shadow); }
+        .crumb { cursor: pointer; padding: 8px 16px; background: var(--glass-bg); backdrop-filter: var(--blur); border-radius: 12px; border: 1px solid var(--glass-border); transition: all 0.2s; display: flex; align-items: center; gap: 6px; box-shadow: var(--glass-shadow); }
         .crumb:hover { background: var(--text-main); color: var(--bg-color); }
         .crumb.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); }
-        .crumb-separator { color: var(--text-muted); font-weight: 300; }
+        .crumb-separator { font-weight: 300; opacity: 0.6;}
 
-        #folder-view, #checklist-view, #note-view, #pyq-view { display: none; animation: fadeIn 0.3s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #folder-view, #checklist-view, #note-view, #pyq-view, #health-view { display: none; animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; }
-        .card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 25px; cursor: pointer; box-shadow: var(--glass-shadow); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; display: flex; flex-direction: column; min-height: 160px; overflow: hidden; }
-        .card:hover { transform: translateY(-5px) scale(1.02); background: rgba(255, 255, 255, 0.9); box-shadow: 0 20px 45px rgba(0,0,0,0.1); }
+        .card { @extend .glass-panel; padding: 25px; cursor: pointer; display: flex; flex-direction: column; min-height: 160px; overflow: hidden; }
+        .card:hover { transform: translateY(-5px) scale(1.02); background: rgba(255, 255, 255, 0.4); box-shadow: 0 20px 45px rgba(0,0,0,0.1); }
         .zen-mode .card { background: #1e293b; border-color: #334155; } .zen-mode .card:hover { background: #334155; }
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2; }
         .card-icon { font-size: 2.5rem; }
-        .card-type-badge { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); background: var(--bg-color); padding: 5px 10px; border-radius: 10px; text-transform: uppercase; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card-type-badge { font-size: 0.7rem; font-weight: 700; opacity: 0.8; background: var(--bg-color); padding: 5px 10px; border-radius: 10px; text-transform: uppercase; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: var(--text-main); }
         .card-title { font-size: 1.25rem; font-weight: 700; line-height: 1.3; margin-top: auto; padding-top: 20px; z-index: 2;}
         .progress-wrapper { margin-top: 15px; z-index: 2;}
-        .progress-stats { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
-        .progress-track { width: 100%; height: 6px; background: rgba(0, 0, 0, 0.1); border-radius: 10px; overflow: hidden; }
+        .progress-stats { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; opacity: 0.8; margin-bottom: 6px; }
+        .progress-track { width: 100%; height: 6px; background: rgba(0, 0, 0, 0.15); border-radius: 10px; overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 10px; transition: width 0.6s ease; background-color: var(--accent); }
         .card-image-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 0; transition: opacity 0.3s; }
         .card:hover .card-image-bg { opacity: 0.8; }
@@ -81,57 +97,64 @@
         .mini-btn:hover { background: var(--text-main); color: var(--bg-color); transform: scale(1.1); }
 
         .task-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; max-width: 800px; }
-        .task-item { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; font-size: 1.1rem; font-weight: 500; transition: all 0.3s ease; box-shadow: var(--glass-shadow); }
-        .zen-mode .task-item { background: #1e293b; border-color: #334155; }
+        .task-item { background: var(--glass-bg); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; font-size: 1.1rem; font-weight: 500; transition: all 0.3s ease; box-shadow: var(--glass-shadow); }
         .task-content { display: flex; align-items: center; flex: 1; }
-        .task-item input[type="checkbox"] { appearance: none; width: 26px; height: 26px; border: 2px solid var(--text-muted); border-radius: 50%; margin-right: 16px; cursor: pointer; position: relative; flex-shrink: 0; background: transparent; transition: all 0.2s;}
-        .task-item input[type="checkbox"]:checked { background-color: #10b981; border-color: #10b981; }
+        .task-item input[type="checkbox"] { appearance: none; width: 26px; height: 26px; border: 2px solid var(--text-main); opacity: 0.5; border-radius: 50%; margin-right: 16px; cursor: pointer; position: relative; flex-shrink: 0; background: transparent; transition: all 0.2s;}
+        .task-item input[type="checkbox"]:checked { background-color: #10b981; border-color: #10b981; opacity: 1;}
         .task-item input[type="checkbox"]:checked::after { content: '✓'; position: absolute; color: white; font-size: 16px; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        .task-item.completed { opacity: 0.5; } .task-item.completed .task-content span { text-decoration: line-through; color: var(--text-muted); }
+        .task-item.completed { opacity: 0.5; } .task-item.completed .task-content span { text-decoration: line-through; opacity: 0.7; }
 
         /* Full Width Editor */
         .workbench-layout { display: flex; flex-direction: column; align-items: stretch; height: 75vh; }
         .workbench-panel#editor-panel { width: 100%; display: flex; flex-direction: column; height: 100%; }
         
-        .editor-toolbar { display: flex; gap: 6px; background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 16px 16px 0 0; margin-bottom: -1px; flex-wrap: wrap; align-items: center;}
-        .editor-btn { background: var(--bg-color); border: 1px solid var(--glass-border); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-family: 'Outfit'; font-weight: 600; font-size: 0.9rem; color: var(--text-main); transition: all 0.2s;}
-        .editor-btn:hover { background: var(--text-muted); color: white; }
+        .editor-toolbar { display: flex; gap: 6px; background: var(--glass-bg); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); padding: 10px 15px; border-radius: 20px 20px 0 0; margin-bottom: -1px; flex-wrap: wrap; align-items: center;}
+        .editor-btn { background: var(--bg-color); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 10px; cursor: pointer; font-family: 'Outfit'; font-weight: 600; font-size: 0.9rem; color: var(--text-main); transition: all 0.2s;}
+        .editor-btn:hover { background: var(--text-main); color: var(--bg-color); transform: translateY(-2px);}
         .color-picker { width: 30px; height: 30px; padding: 0; border: none; cursor: pointer; border-radius: 50%; overflow: hidden;}
         
-        .rich-editor { width: 100%; flex: 1; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 0 0 24px 24px; padding: 40px 60px; font-family: 'Outfit', sans-serif; font-size: 1.15rem; line-height: 1.8; color: var(--text-main); outline: none; box-shadow: var(--glass-shadow); overflow-y: auto; }
-        .zen-mode .rich-editor, .zen-mode .editor-toolbar, .zen-mode .editor-btn { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+        .rich-editor { width: 100%; flex: 1; background: var(--glass-bg); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: 0 0 24px 24px; padding: 40px 60px; font-family: 'Outfit', sans-serif; font-size: 1.15rem; line-height: 1.8; color: var(--text-main); outline: none; box-shadow: var(--glass-shadow); overflow-y: auto; }
 
         /* PYQ ENGINE HUB */
-        .pyq-container { display: flex; gap: 20px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; height: 75vh; box-shadow: var(--glass-shadow); overflow: hidden;}
-        .pyq-sidebar { width: 300px; background: rgba(0,0,0,0.03); border-right: 1px solid var(--glass-border); padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto;}
-        .pyq-tab { padding: 12px 15px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all 0.2s; border: 1px solid transparent; font-size: 0.95rem; line-height: 1.3;}
-        .pyq-tab:hover { background: rgba(255,255,255,0.5); }
-        .pyq-tab.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.1);}
+        .pyq-container { display: flex; gap: 20px; background: var(--glass-bg); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: 24px; height: 75vh; box-shadow: var(--glass-shadow); overflow: hidden;}
+        .pyq-sidebar { width: 320px; background: rgba(0,0,0,0.03); border-right: 1px solid var(--glass-border); padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto;}
+        .pyq-tab { padding: 15px; border-radius: 14px; cursor: pointer; font-weight: 600; transition: all 0.2s; border: 1px solid var(--glass-border); font-size: 0.95rem; line-height: 1.3; background: rgba(255,255,255,0.4); color: var(--text-main);}
+        .pyq-tab:hover { background: rgba(255,255,255,0.8); }
+        .pyq-tab.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.2);}
         .pyq-tab.special { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; border-color: transparent;}
         
         .pyq-content { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px;}
         .ai-command-bar { background: var(--bg-color); padding: 20px; border-radius: 16px; border: 1px solid var(--glass-border); display: flex; gap: 15px; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-items: center;}
-        .ai-input { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--glass-border); font-family: 'Outfit'; font-size: 1rem; min-width: 200px;}
+        .ai-input { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--glass-border); font-family: 'Outfit'; font-size: 1rem; min-width: 200px; color: var(--text-main);}
         
         .question-card { background: var(--bg-color); border: 1px solid var(--glass-border); padding: 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
         .q-text { font-size: 1.15rem; font-weight: 600; margin-bottom: 15px; line-height: 1.5;}
         .q-option { display: flex; align-items: center; padding: 12px 15px; border: 1px solid var(--glass-border); border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; background: var(--glass-bg);}
         .q-option:hover { border-color: var(--accent); }
         .q-option input { margin-right: 15px; transform: scale(1.2); cursor: pointer;}
-        .q-exp { margin-top: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 8px; font-size: 0.95rem; display: none; }
+        .q-exp { margin-top: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 8px; font-size: 0.95rem; display: none; color: #1d1d1f;}
         
-        .quiz-toggle-container { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text-main); font-size: 0.95rem; padding: 8px 15px; background: white; border-radius: 10px; border: 1px solid var(--glass-border); }
+        .quiz-toggle-container { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text-main); font-size: 0.95rem; padding: 8px 15px; background: rgba(255,255,255,0.4); border-radius: 10px; border: 1px solid var(--glass-border); }
         .quiz-toggle-container input { transform: scale(1.2); cursor: pointer; }
 
-        #command-center { position: fixed; top: 0; right: -450px; width: 420px; max-width: 100%; height: 100vh; background: var(--glass-bg); backdrop-filter: blur(25px); border-left: 1px solid var(--glass-border); box-shadow: -10px 0 50px rgba(0,0,0,0.1); z-index: 1000; transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1); display: flex; flex-direction: column; padding: 30px; overflow-y: auto;}
+        /* 🍎 HEALTH & NUTRITION HUB */
+        .health-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .health-card { background: var(--glass-bg); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: 20px; padding: 25px; box-shadow: var(--glass-shadow); }
+        .macro-bar-container { margin-bottom: 15px; }
+        .macro-label { display: flex; justify-content: space-between; font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; }
+        .health-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); font-family: 'Outfit'; font-size: 1.1rem; margin-bottom: 15px; outline: none; color: var(--text-main);}
+        .health-btn { background: var(--text-main); color: var(--bg-color); border: none; padding: 15px; border-radius: 12px; font-family: 'Outfit'; font-weight: 700; font-size: 1rem; cursor: pointer; width: 100%; display: flex; justify-content: center; gap: 10px; align-items: center;}
+        .health-log-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--glass-border); font-size: 0.9rem; }
+
+        #command-center { position: fixed; top: 0; right: -450px; width: 420px; max-width: 100%; height: 100vh; background: var(--glass-bg); backdrop-filter: var(--blur); border-left: 1px solid var(--glass-border); box-shadow: -10px 0 50px rgba(0,0,0,0.1); z-index: 1000; transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1); display: flex; flex-direction: column; padding: 30px; overflow-y: auto;}
         #command-center.open { right: 0; }
         .cc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px;}
         
         .cal-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: 700;}
         .cal-controls button { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); font-family: 'Outfit';}
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-bottom: 10px;}
-        .cal-head { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;}
-        .cal-day { padding: 8px 0; font-size: 0.9rem; font-weight: 600; background: var(--bg-color); border-radius: 8px; border: 1px solid var(--glass-border); color: var(--text-main); cursor: pointer; transition: all 0.2s;}
+        .cal-head { font-size: 0.75rem; font-weight: 700; opacity: 0.8; text-transform: uppercase;}
+        .cal-day { padding: 8px 0; font-size: 0.9rem; font-weight: 600; background: rgba(255,255,255,0.3); border-radius: 8px; border: 1px solid var(--glass-border); color: var(--text-main); cursor: pointer; transition: all 0.2s;}
         .cal-day:hover { border-color: var(--accent); }
         .cal-day.today { background: var(--text-main); color: var(--bg-color); }
         .cal-day.empty { background: transparent; border: none; cursor: default;}
@@ -141,17 +164,17 @@
         .days-left { font-size: 1.3rem; color: var(--accent); background: var(--bg-color); padding: 5px 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
 
         .protocol-list { display: flex; flex-direction: column; gap: 10px; }
-        .proto-item { display: flex; align-items: center; background: var(--bg-color); padding: 10px 15px; border-radius: 12px; border: 1px solid var(--glass-border); transition: all 0.2s;}
+        .proto-item { display: flex; align-items: center; background: rgba(255,255,255,0.3); padding: 10px 15px; border-radius: 12px; border: 1px solid var(--glass-border); transition: all 0.2s;}
         .proto-item input[type="checkbox"] { margin-right: 15px; transform: scale(1.3); cursor: pointer; accent-color: var(--accent);}
         .proto-item input[type="text"] { flex: 1; border: none; background: transparent; font-family: 'Outfit'; font-size: 0.95rem; color: var(--text-main); outline: none;}
-        .proto-item.done input[type="text"] { text-decoration: line-through; color: var(--text-muted); }
+        .proto-item.done input[type="text"] { text-decoration: line-through; opacity: 0.6; }
 
         .action-btn { flex: 1; padding: 18px; border: none; border-radius: 20px; font-family: 'Outfit'; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.3s; box-shadow: var(--glass-shadow); display: flex; justify-content: center; align-items: center; gap: 10px; background: var(--text-main); color: var(--bg-color);}
-        .action-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
         .action-btn.ai-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .action-btn.health-tab-btn { background: linear-gradient(135deg, #f43f5e, #e11d48); color: white; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; }
-        .modal-content { background: var(--bg-color); padding: 35px; border-radius: 28px; width: 90%; max-width: 450px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); border: 1px solid var(--glass-border); position: relative;}
+        .modal-content { background: var(--bg-color); padding: 35px; border-radius: 28px; width: 90%; max-width: 450px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); border: 1px solid var(--glass-border); position: relative; color: var(--text-main);}
         .modal-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 25px; margin-top:0;}
         .modal-input { width: 100%; padding: 15px 18px; border: 2px solid #e4e4e7; border-radius: 14px; font-family: 'Outfit'; font-size: 1.1rem; margin-bottom: 20px; outline: none; background: white;}
         .modal-btns { display: flex; gap: 15px; flex-wrap: wrap;}
@@ -160,8 +183,8 @@
         .modal-btn.confirm { background: var(--text-main); color: var(--bg-color); }
         .modal-btn.secondary { background: var(--accent); color: white; }
         
-        #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .empty-state { text-align: center; color: var(--text-muted); padding: 50px 20px; font-style: italic; background: var(--glass-bg); border-radius: 20px; border: 2px dashed var(--glass-border); font-size: 1.1rem; grid-column: 1 / -1; }
+        #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-color);}
+        .empty-state { text-align: center; opacity: 0.7; padding: 50px 20px; font-style: italic; background: rgba(255,255,255,0.2); border-radius: 20px; border: 2px dashed var(--glass-border); font-size: 1.1rem; grid-column: 1 / -1; }
         
         /* Whiteboard Modal */
         #whiteboard-canvas { background: white; border-radius: 16px; border: 1px solid var(--glass-border); cursor: crosshair; }
@@ -184,20 +207,75 @@
     // 🔴 2. SECURE CONFIGURATION VAULT
     // =========================================================================
     window.firebaseConfig = {
-  apiKey: "AIzaSyDE-iAfrqFsOJMdEYpFsP2M0wdoACq9GOA",
-  authDomain: "studyflow-e9fa2.firebaseapp.com",
-  projectId: "studyflow-e9fa2",
-  storageBucket: "studyflow-e9fa2.firebasestorage.app",
-  messagingSenderId: "482314535723",
-  appId: "1:482314535723:web:51a6f68aff5b598d71fb6e",
-  measurementId: "G-2NERC3XGXK"
-};
+        apiKey: "AIzaSyDE-iAfrqFsOJMdEYpFsP2M0wdoACq9GOA",
+        authDomain: "studyflow-e9fa2.firebaseapp.com",
+        projectId: "studyflow-e9fa2",
+        storageBucket: "studyflow-e9fa2.firebasestorage.app",
+        messagingSenderId: "482314535723",
+        appId: "1:482314535723:web:51a6f68aff5b598d71fb6e",
+        measurementId: "G-2NERC3XGXK"
+    };
     
     window.IMGBB_API_KEY = "31949cbb65fc04d1de0e12cf7d162116"; 
     window.GROQ_API_KEY = "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";
 
     // =========================================================================
-    // 🧠 3. GROQ AI Llama 3.1 INTEGRATION (STRICT TAB-BASED PROMPTING)
+    // 🌊 LIQUID UI RIPPLE PHYSICS
+    // =========================================================================
+    document.addEventListener('mousedown', function (e) {
+        let target = e.target.closest('.action-btn, .mini-btn, .card, .pyq-tab, .health-btn');
+        if (!target) return;
+        let ripple = document.createElement('span'); ripple.classList.add('ripple');
+        let rect = target.getBoundingClientRect();
+        ripple.style.left = `${e.clientX - rect.left}px`; ripple.style.top = `${e.clientY - rect.top}px`;
+        target.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+    });
+
+    // =========================================================================
+    // 🎨 DYNAMIC COLOR WHEEL CONTRAST ENGINE
+    // =========================================================================
+    window.applyDynamicContrast = (imageUrl) => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.src = imageUrl;
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                canvas.width = 100; canvas.height = 100; ctx.drawImage(img, 0, 0, 100, 100);
+                
+                const data = ctx.getImageData(0, 0, 100, 100).data;
+                let r = 0, g = 0, b = 0;
+                for (let i = 0; i < data.length; i += 4) { r += data[i]; g += data[i+1]; b += data[i+2]; }
+                const count = data.length / 4;
+                r = Math.floor(r / count) / 255; g = Math.floor(g / count) / 255; b = Math.floor(b / count) / 255;
+
+                const max = Math.max(r, g, b), min = Math.min(r, g, b);
+                let h, s, l = (max + min) / 2;
+
+                if (max === min) { h = s = 0; } 
+                else {
+                    const d = max - min; s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                    switch (max) {
+                        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                        case g: h = (b - r) / d + 2; break;
+                        case b: h = (r - g) / d + 4; break;
+                    }
+                    h /= 6;
+                }
+
+                // Calculate exact opposite on the color wheel
+                let oppositeHue = (h * 360 + 180) % 360;
+                // If background is bright (l > 0.5), text must be dark (15%). If dark, text bright (90%)
+                const dynamicTextColor = `hsl(${oppositeHue}, 85%, ${l > 0.5 ? '15%' : '90%'})`;
+                
+                document.documentElement.style.setProperty('--text-main', dynamicTextColor);
+            } catch (e) { console.error("Canvas CORS issue or image error", e); }
+        };
+    };
+
+    // =========================================================================
+    // 🧠 3. GROQ AI Llama 3.1 INTEGRATION (PYQ, MOTIVATION, HEALTH)
     // =========================================================================
     window.fetchGroqMotivation = async () => {
         try {
@@ -212,7 +290,7 @@
         } catch (e) { return "The UPSC marathon is won in the daily sprints."; }
     };
 
-    window.currentQuestions = []; // Store active questions for quiz evaluation
+    window.currentQuestions = []; 
 
     window.generateAIQuestions = async () => {
         const container = document.getElementById('pyq-questions-container');
@@ -221,134 +299,166 @@
         
         container.innerHTML = `<div style="text-align:center; padding: 50px; font-size:1.2rem; color:var(--accent); font-weight:bold;">⚡ Groq Llama 3.1 is synthesizing the paper...</div>`;
         
-        // --- STRICT TAB-BASED ISOLATION LOGIC ---
         let strictFocus = "";
-        
-        if (examTab.includes("Civil")) {
-            strictFocus = "This is a STRICTLY TECHNICAL CIVIL ENGINEERING exam. Generate hardcore civil engineering questions (e.g. structures, fluid mechanics, surveying). DO NOT generate general studies, math, or history.";
-        } 
-        else if (examTab.includes("Mechanical")) {
-            strictFocus = "This is a STRICTLY TECHNICAL MECHANICAL ENGINEERING exam. Generate hardcore mechanical engineering questions (e.g. thermodynamics, machine design). DO NOT generate general studies, math, or history.";
-        } 
-        else if (examTab.includes("CSAT") || examTab.includes("PO")) {
-            strictFocus = "This is a QUANTITATIVE APTITUDE AND REASONING exam. Generate complex math puzzles, logical reasoning, data interpretation, or probability questions. DO NOT generate general knowledge, history, or engineering questions.";
-        } 
-        else {
-            // General Studies Fallback (CSE GS, MPSC State Services)
-            strictFocus = "This is a GENERAL STUDIES exam. Generate standard general knowledge questions (Polity, History, Economy, Geography, Environment). DO NOT generate engineering or complex math questions.";
-        }
+        if (examTab.includes("Civil")) strictFocus = "This is a STRICTLY TECHNICAL CIVIL ENGINEERING exam. Generate hardcore civil engineering questions (e.g. structures, fluid mechanics). DO NOT generate general studies or math.";
+        else if (examTab.includes("Mechanical")) strictFocus = "This is a STRICTLY TECHNICAL MECHANICAL ENGINEERING exam. Generate hardcore mechanical engineering questions (e.g. thermodynamics). DO NOT generate general studies or math.";
+        else if (examTab.includes("CSAT") || examTab.includes("PO")) strictFocus = "This is a QUANTITATIVE APTITUDE AND REASONING exam. Generate complex math puzzles, logical reasoning, and data interpretation. DO NOT generate general knowledge or engineering questions.";
+        else strictFocus = "This is a GENERAL STUDIES exam. Generate standard general knowledge questions (Polity, History, Economy, Geography). DO NOT generate engineering or math questions.";
 
         const prompt = `You are an expert examiner for Indian competitive exams. Generate 5 multiple choice questions.
         Target Category: ${examTab}
-        
         CRITICAL INSTRUCTION: ${strictFocus}
         ${customTopic ? `Specific Topic Requested by User: ${customTopic}` : ''}
-        
         You MUST return ONLY a valid JSON object. Do NOT wrap it in markdown blockquotes like \`\`\`json. 
         Format EXACTLY like this:
-        {
-            "questions": [
-                {
-                    "q": "Question text here?",
-                    "options": ["Option A", "Option B", "Option C", "Option D"],
-                    "ans": 0,
-                    "exp": "Detailed explanation of why the answer is correct."
-                }
-            ]
-        }`;
+        { "questions": [ { "q": "Question text here?", "options": ["Option A", "Option B", "Option C", "Option D"], "ans": 0, "exp": "Explanation." } ] }`;
 
         try {
             const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST", headers: { "Authorization": `Bearer ${window.GROQ_API_KEY}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, temperature: 0.3 })
             });
-            
-            if (!res.ok) {
-                const err = await res.json();
-                container.innerHTML = `<div class="empty-state" style="color:red;">API Error: ${err.error?.message || 'Connection failed'}.</div>`; return;
-            }
-            
+            if (!res.ok) { const err = await res.json(); container.innerHTML = `<div class="empty-state" style="color:red;">API Error: ${err.error?.message || 'Connection failed'}.</div>`; return; }
             const data = await res.json();
             let rawText = data.choices[0].message.content.replace(/```json/gi, '').replace(/```/gi, '').trim();
             const parsed = JSON.parse(rawText);
-            
-            if (!parsed.questions || parsed.questions.length === 0) {
-                 container.innerHTML = `<div class="empty-state" style="color:red;">AI generated an empty quiz. Try again.</div>`; return;
-            }
-            
-            window.currentQuestions = parsed.questions;
-            renderFetchedQuestions();
-            
-        } catch (e) {
-            container.innerHTML = `<div class="empty-state" style="color:red;">API Error: Failed to parse AI response. Formatting glitch. Hit Generate again.</div>`;
-        }
+            if (!parsed.questions || parsed.questions.length === 0) { container.innerHTML = `<div class="empty-state" style="color:red;">AI generated an empty quiz. Try again.</div>`; return; }
+            window.currentQuestions = parsed.questions; renderFetchedQuestions();
+        } catch (e) { container.innerHTML = `<div class="empty-state" style="color:red;">API Error: Failed to parse AI response. Hit Generate again.</div>`; }
     };
 
     function renderFetchedQuestions() {
         const container = document.getElementById('pyq-questions-container'); container.innerHTML = '';
         const isQuizMode = document.getElementById('quiz-mode-toggle').checked;
-        
         const contextBanner = document.createElement('div');
-        contextBanner.style.cssText = "font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; text-align: center;";
-        contextBanner.innerText = `Currently viewing: ${window.activePYQCategory}`;
-        container.appendChild(contextBanner);
+        contextBanner.style.cssText = "font-size: 0.85rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; text-align: center;";
+        contextBanner.innerText = `Currently viewing: ${window.activePYQCategory}`; container.appendChild(contextBanner);
 
         window.currentQuestions.forEach((qObj, qIdx) => {
             const card = document.createElement('div'); card.className = 'question-card'; card.id = `qcard_${qIdx}`;
             let optionsHTML = '';
             qObj.options.forEach((opt, oIdx) => { optionsHTML += `<label class="q-option"><input type="radio" name="q_${qIdx}" value="${oIdx}">${opt}</label>`; });
-            
             const safeExp = encodeURIComponent(qObj.exp);
-            
             let btnHTML = isQuizMode ? '' : `<button class="mini-btn" style="width:auto; padding:0 15px; border-radius:10px; margin-top:15px; font-weight:600;" onclick="window.checkPYQAnswer(${qIdx}, ${qObj.ans}, '${safeExp}')">Check Answer</button>`;
-            
-            card.innerHTML = `
-                <div class="q-text">Q${qIdx + 1}: ${qObj.q.replace(/\n/g, '<br>')}</div>
-                ${optionsHTML}
-                ${btnHTML}
-                <div class="q-exp" id="exp_${qIdx}"></div>`;
+            card.innerHTML = `<div class="q-text">Q${qIdx + 1}: ${qObj.q.replace(/\n/g, '<br>')}</div>${optionsHTML}${btnHTML}<div class="q-exp" id="exp_${qIdx}"></div>`;
             container.appendChild(card);
         });
 
         if (isQuizMode && window.currentQuestions.length > 0) {
-            const submitBtn = document.createElement('button');
-            submitBtn.className = 'action-btn'; submitBtn.style.cssText = "width:100%; margin-top: 20px; background: linear-gradient(135deg, #10b981, #059669);";
-            submitBtn.innerText = "Submit Full Quiz & Evaluate";
-            submitBtn.onclick = window.evaluateFullQuiz;
-            container.appendChild(submitBtn);
+            const submitBtn = document.createElement('button'); submitBtn.className = 'action-btn'; submitBtn.style.cssText = "width:100%; margin-top: 20px; background: linear-gradient(135deg, #10b981, #059669); color: white;"; submitBtn.innerText = "Submit Full Quiz & Evaluate"; submitBtn.onclick = window.evaluateFullQuiz; container.appendChild(submitBtn);
         }
     }
 
     window.handleQuizModeToggle = () => { if(window.currentQuestions && window.currentQuestions.length > 0) renderFetchedQuestions(); };
-
     window.checkPYQAnswer = (qIdx, correctIdx, expText) => {
-        const selected = document.querySelector(`input[name="q_${qIdx}"]:checked`);
-        const expDiv = document.getElementById(`exp_${qIdx}`);
+        const selected = document.querySelector(`input[name="q_${qIdx}"]:checked`); const expDiv = document.getElementById(`exp_${qIdx}`);
         if(!selected) { alert("Please select an option first."); return; }
         const isCorrect = parseInt(selected.value) === correctIdx;
-        expDiv.style.display = 'block'; 
-        expDiv.style.borderLeftColor = isCorrect ? '#10b981' : '#ef4444'; 
-        expDiv.style.backgroundColor = isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+        expDiv.style.display = 'block'; expDiv.style.borderLeftColor = isCorrect ? '#10b981' : '#ef4444'; expDiv.style.backgroundColor = isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
         expDiv.innerHTML = `<strong>${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</strong><br>${decodeURIComponent(expText)}`;
     };
-
     window.evaluateFullQuiz = () => {
         let score = 0;
         window.currentQuestions.forEach((qObj, qIdx) => {
-            const selected = document.querySelector(`input[name="q_${qIdx}"]:checked`);
-            const expDiv = document.getElementById(`exp_${qIdx}`);
-            const isCorrect = selected && parseInt(selected.value) === qObj.ans;
-            
-            if(isCorrect) score++;
-
-            expDiv.style.display = 'block'; 
-            expDiv.style.borderLeftColor = isCorrect ? '#10b981' : '#ef4444'; 
-            expDiv.style.backgroundColor = isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-            expDiv.innerHTML = `<strong>${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</strong> (Correct answer was: ${qObj.options[qObj.ans]})<br>${qObj.exp}`;
-            
+            const selected = document.querySelector(`input[name="q_${qIdx}"]:checked`); const expDiv = document.getElementById(`exp_${qIdx}`);
+            const isCorrect = selected && parseInt(selected.value) === qObj.ans; if(isCorrect) score++;
+            expDiv.style.display = 'block'; expDiv.style.borderLeftColor = isCorrect ? '#10b981' : '#ef4444'; expDiv.style.backgroundColor = isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+            expDiv.innerHTML = `<strong style="color:#1d1d1f">${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</strong> <span style="color:#1d1d1f">(Correct answer was: ${qObj.options[qObj.ans]})</span><br><span style="color:#1d1d1f">${qObj.exp}</span>`;
             document.querySelectorAll(`input[name="q_${qIdx}"]`).forEach(input => input.disabled = true);
         });
         alert(`Quiz Complete!\nYou scored: ${score} / ${window.currentQuestions.length}`);
+    };
+
+    // =========================================================================
+    // 🍎 AI HEALTH & DIET ENGINE
+    // =========================================================================
+    window.logFoodAI = async () => {
+        const foodStr = document.getElementById('food-input').value; if(!foodStr) return;
+        document.getElementById('food-input').value = "Parsing macros with Groq AI...";
+        const prompt = `User ate: "${foodStr}". Calculate the total nutritional value for this portion. 
+        Return ONLY a JSON object: { "item": "Name of food", "cal": total_calories_number, "p": protein_grams_number, "c": carbs_grams_number, "f": fats_grams_number }. Do not wrap in markdown.`;
+        
+        try {
+            const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: "POST", headers: { "Authorization": `Bearer ${window.GROQ_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, temperature: 0.1 })
+            });
+            const data = await res.json();
+            const macros = JSON.parse(data.choices[0].message.content.replace(/```json/gi, '').replace(/```/gi, '').trim());
+            
+            // Update State
+            window.appState.userPrefs.health = window.appState.userPrefs.health || { cal:0, p:0, c:0, f:0, logs:[] };
+            window.appState.userPrefs.health.cal += macros.cal; window.appState.userPrefs.health.p += macros.p; window.appState.userPrefs.health.c += macros.c; window.appState.userPrefs.health.f += macros.f;
+            window.appState.userPrefs.health.logs.push(`${macros.item} (${macros.cal}kcal, P:${macros.p}g, C:${macros.c}g, F:${macros.f}g)`);
+            
+            document.getElementById('food-input').value = ""; window.renderHealthHub(); window.saveToCloud();
+        } catch(e) { document.getElementById('food-input').value = ""; alert("AI parsing failed. Try again."); }
+    };
+
+    window.calculateBMI = () => {
+        const w = parseFloat(document.getElementById('weight-input').value); const h = parseFloat(document.getElementById('height-input').value) / 100;
+        if(w && h) { const bmi = (w / (h * h)).toFixed(1); const tdee = Math.round((10 * w + 6.25 * (h*100) - 5 * 25 + 5) * 1.55); // Approx active male
+        document.getElementById('bmi-result').innerHTML = `<strong>BMI:</strong> ${bmi} <br><strong>TDEE (Maint.):</strong> ~${tdee} kcal <br><strong>Weight Loss Goal:</strong> ~${tdee - 500} kcal/day`; }
+    };
+
+    window.generateDietPlan = async () => {
+        const container = document.getElementById('diet-plan-result'); container.innerHTML = "Generating custom Indian weight-loss diet...";
+        const prompt = `Create a high-protein, calorie-deficit daily Indian meal plan (approx 1600-1800 kcal) for weight loss. Include exact portions (grams) and macro breakdown per meal. Format as clean HTML with <h4> and <ul> tags. Do not use markdown wrappers.`;
+        try {
+            const res = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": `Bearer ${window.GROQ_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: prompt }], temperature: 0.5 }) });
+            const data = await res.json(); container.innerHTML = data.choices[0].message.content.replace(/```html/gi, '').replace(/```/gi, '').trim();
+        } catch(e) { container.innerHTML = "Error generating plan."; }
+    };
+
+    window.renderHealthHub = () => {
+        const h = window.appState.userPrefs.health || { cal:0, p:0, c:0, f:0, logs:[] };
+        const maxCal = 2000; const maxP = 140; const maxC = 200; const maxF = 65;
+        
+        const setBar = (id, val, max, color) => {
+            const pct = Math.min((val/max)*100, 100);
+            document.getElementById(`${id}-text`).innerText = `${val} / ${max}`;
+            document.getElementById(`${id}-fill`).style.width = `${pct}%`;
+            document.getElementById(`${id}-fill`).style.backgroundColor = color;
+        };
+        
+        setBar('macro-cal', h.cal, maxCal, '#ef4444'); setBar('macro-p', h.p, maxP, '#3b82f6'); setBar('macro-c', h.c, maxC, '#f59e0b'); setBar('macro-f', h.f, maxF, '#f59e0b');
+        
+        const logContainer = document.getElementById('food-logs'); logContainer.innerHTML = '';
+        h.logs.forEach(log => { const d = document.createElement('div'); d.className = 'health-log-item'; d.innerText = log; logContainer.appendChild(d); });
+    };
+
+    window.clearHealthLogs = async () => { window.appState.userPrefs.health = { cal:0, p:0, c:0, f:0, logs:[] }; window.renderHealthHub(); await window.saveToCloud(); };
+
+    // =========================================================================
+    // 📸 TESSERACT.JS OCR SCANNERS (NOTES & CHECKLISTS)
+    // =========================================================================
+    window.runNoteOCR = async (e) => {
+        const file = e.target.files[0]; if(!file) return;
+        const ind = document.getElementById('save-indicator'); ind.innerText = "Scanning Image for Text (OCR)...";
+        try {
+            const { data: { text } } = await Tesseract.recognize(file, 'eng');
+            document.getElementById('note-editor').focus();
+            document.execCommand('insertText', false, "\n\n[--- Scanned Text ---]\n" + text + "\n[--------------------]\n\n");
+            ind.innerText = "OCR Complete. Cloud synced."; window.saveToCloud();
+        } catch(err) { ind.innerText = "OCR Failed."; }
+        e.target.value = ""; 
+    };
+
+    window.runChecklistOCR = async (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        const ind = document.getElementById('cloud-indicator'); if (ind) ind.innerText = "Scanning Checklist (OCR)...";
+        try {
+            const { data: { text } } = await Tesseract.recognize(file, 'eng');
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const ctx = resolveCurrentContext();
+            if (ctx.node && ctx.node.type === 'checklist') {
+                if (!ctx.node.tasks) ctx.node.tasks = [];
+                lines.forEach(line => { ctx.node.tasks.push({ id: generateId(), text: line, done: false }); });
+                window.renderOS(); await window.saveToCloud();
+                if (ind) ind.innerText = "☁️ LIVE CLOUD SYNC";
+            }
+        } catch (err) { if (ind) ind.innerText = "OCR Failed"; }
+        e.target.value = "";
     };
 
     // =========================================================================
@@ -356,19 +466,7 @@
     // =========================================================================
     window.appState = {
         tree: [], currentPath: [],
-        userPrefs: { 
-            bgUrl: '', 
-            protocol: [
-                { text: "06:00 AM - Wake & Core Revision", done: false },
-                { text: "08:00 AM - Deep Work Block 1", done: false },
-                { text: "12:00 PM - Break & Nutrition", done: false },
-                { text: "02:00 PM - GS / Optional Prep", done: false },
-                { text: "06:00 PM - Active Recall PYQs", done: false },
-                { text: "09:00 PM - Day Wrap & Planning", done: false }
-            ], 
-            events: [{ title: "ESE Prelims (Target)", date: "2027-02-14" }], 
-            lastPath: '' 
-        },
+        userPrefs: { bgUrl: '', protocol: [{ text: "06:00 AM - Wake & Core Revision", done: false }, { text: "08:00 AM - Deep Work Block 1", done: false }], events: [], lastPath: '', health: { cal:0, p:0, c:0, f:0, logs:[] } },
         docRef: null, currentUser: null, isSignupMode: false, isZenMode: false
     };
     
@@ -383,29 +481,17 @@
         if(!email || !password) { errorDiv.innerText = "Enter credentials."; return; }
         try {
             errorDiv.innerText = "Connecting...";
-            if (window.appState.isSignupMode) await createUserWithEmailAndPassword(auth, email, password);
-            else await signInWithEmailAndPassword(auth, email, password);
+            if (window.appState.isSignupMode) await createUserWithEmailAndPassword(auth, email, password); else await signInWithEmailAndPassword(auth, email, password);
         } catch (e) { errorDiv.innerText = e.message.replace("Firebase: ", ""); }
     };
 
-    window.toggleAuthMode = () => {
-        window.appState.isSignupMode = !window.appState.isSignupMode;
-        document.getElementById('auth-action-btn').innerText = window.appState.isSignupMode ? "Create Account" : "Login Workspace";
-        document.getElementById('auth-switch-text').innerText = window.appState.isSignupMode ? "Already have an account? Login" : "Need an account? Sign up";
-    };
+    window.toggleAuthMode = () => { window.appState.isSignupMode = !window.appState.isSignupMode; document.getElementById('auth-action-btn').innerText = window.appState.isSignupMode ? "Create Account" : "Login Workspace"; document.getElementById('auth-switch-text').innerText = window.appState.isSignupMode ? "Already have an account? Login" : "Need an account? Sign up"; };
     window.logout = async () => { if (auth) await signOut(auth); };
 
     if (isConfigValid) {
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.appState.currentUser = user; 
-                document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block';
-                window.appState.docRef = doc(db, "users", user.uid); initCloud();
-            } else {
-                window.appState.currentUser = null; 
-                document.getElementById('auth-screen').style.display = 'flex'; document.getElementById('app-screen').style.display = 'none';
-                window.appState.tree = []; window.location.hash = ''; window.appState.currentPath = [];
-            }
+            if (user) { window.appState.currentUser = user; document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block'; window.appState.docRef = doc(db, "users", user.uid); initCloud(); } 
+            else { window.appState.currentUser = null; document.getElementById('auth-screen').style.display = 'flex'; document.getElementById('app-screen').style.display = 'none'; window.appState.tree = []; window.location.hash = ''; window.appState.currentPath = []; }
         });
     }
 
@@ -413,50 +499,31 @@
         const indicator = document.getElementById('cloud-indicator'); indicator.innerText = 'Syncing...'; indicator.classList.remove('offline');
         try {
             const docSnap = await getDoc(window.appState.docRef);
-            if (!docSnap.exists()) {
-                window.appState.tree = [{ id: generateId(), type: "folder", title: "Sociology Optional", icon: "🧠", children: [] }, { id: generateId(), type: "folder", title: "General Studies", icon: "🏛️", children: [] }];
-                await setDoc(window.appState.docRef, { tree: window.appState.tree, prefs: window.appState.userPrefs });
-            } else { 
-                window.appState.tree = docSnap.data().tree || []; 
-                let savedPrefs = docSnap.data().prefs || {}; window.appState.userPrefs = { ...window.appState.userPrefs, ...savedPrefs }; 
-            }
+            if (!docSnap.exists()) { window.appState.tree = [{ id: generateId(), type: "folder", title: "Core Subjects", icon: "📚", children: [] }]; await setDoc(window.appState.docRef, { tree: window.appState.tree, prefs: window.appState.userPrefs }); } 
+            else { window.appState.tree = docSnap.data().tree || []; let savedPrefs = docSnap.data().prefs || {}; window.appState.userPrefs = { ...window.appState.userPrefs, ...savedPrefs }; }
             
-            document.getElementById('user-welcome').innerText = 'Siddhant | UPSC CSE 2026';
-            applyBackground(); window.renderCalendar(); window.renderProtocol(); window.renderCountdowns();
+            applyBackground(); window.renderCalendar(); window.renderProtocol(); window.renderCountdowns(); window.renderHealthHub();
             
-            if(!window.location.hash && window.appState.userPrefs.lastPath) window.location.hash = window.appState.userPrefs.lastPath;
-            else { let hash = window.location.hash.replace('#', ''); window.appState.currentPath = hash ? hash.split('/') : []; }
-
+            if(!window.location.hash && window.appState.userPrefs.lastPath) window.location.hash = window.appState.userPrefs.lastPath; else { let hash = window.location.hash.replace('#', ''); window.appState.currentPath = hash ? hash.split('/') : []; }
             indicator.innerText = '☁️ LIVE CLOUD SYNC'; window.renderOS();
 
             onSnapshot(window.appState.docRef, (snapshot) => {
                 if (snapshot.exists() && document.activeElement !== document.getElementById('note-editor') && document.activeElement.tagName !== 'INPUT') {
                     window.appState.tree = snapshot.data().tree || []; let sp = snapshot.data().prefs || {}; window.appState.userPrefs = { ...window.appState.userPrefs, ...sp };
-                    applyBackground(); window.renderCountdowns(); window.renderProtocol(); window.renderOS(); 
+                    applyBackground(); window.renderCountdowns(); window.renderProtocol(); window.renderOS(); window.renderHealthHub();
                 }
             });
             
             if(!sessionStorage.getItem('greeted')) {
                 const aiQuote = await window.fetchGroqMotivation();
-                document.getElementById('quote-display').innerText = `"${aiQuote}"`;
-                document.getElementById('author-display').innerText = `- Llama 3 Engine`;
-                document.getElementById('motivational-modal').style.display = 'flex';
-                sessionStorage.setItem('greeted', 'true');
+                document.getElementById('quote-display').innerText = `"${aiQuote}"`; document.getElementById('author-display').innerText = `- Llama 3.1 OS`;
+                document.getElementById('motivational-modal').style.display = 'flex'; sessionStorage.setItem('greeted', 'true');
             }
-        } catch (error) { indicator.innerText = '⚠️ OFFLINE (Check Rules/Adblocker)'; indicator.classList.add('offline'); }
+        } catch (error) { indicator.innerText = '⚠️ OFFLINE'; indicator.classList.add('offline'); }
     }
 
-    window.saveToCloud = async () => {
-        if(!window.appState.docRef) return;
-        const ind = document.getElementById('save-indicator'); if(ind) ind.innerText = "Syncing...";
-        try { await setDoc(window.appState.docRef, { tree: window.appState.tree, prefs: window.appState.userPrefs }); if(ind) ind.innerText = "All changes saved"; } catch (e) {}
-    }
-
-    window.exportVault = () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ tree: window.appState.tree, prefs: window.appState.userPrefs }, null, 4));
-        const downloadAnchor = document.createElement('a'); downloadAnchor.setAttribute("href", dataStr); downloadAnchor.setAttribute("download", `StudyFLOW_Vault_Backup_${Date.now()}.json`);
-        document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove();
-    };
+    window.saveToCloud = async () => { if(!window.appState.docRef) return; const ind = document.getElementById('save-indicator'); if(ind) ind.innerText = "Syncing..."; try { await setDoc(window.appState.docRef, { tree: window.appState.tree, prefs: window.appState.userPrefs }); if(ind) ind.innerText = "All changes saved"; } catch (e) {} }
+    window.exportVault = () => { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ tree: window.appState.tree, prefs: window.appState.userPrefs }, null, 4)); const downloadAnchor = document.createElement('a'); downloadAnchor.setAttribute("href", dataStr); downloadAnchor.setAttribute("download", `FLOW_Vault_Backup_${Date.now()}.json`); document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove(); };
 
     let pomoTimeLeft = 3000; let pomoInterval = null; let pomoRunning = false; let pomoBaseMinutes = 50;
     window.togglePomo = () => {
@@ -465,9 +532,8 @@
         else {
             pomoRunning = true; btn.innerText = "Pause";
             pomoInterval = setInterval(() => {
-                pomoTimeLeft--; let mins = Math.floor(pomoTimeLeft / 60); let secs = pomoTimeLeft % 60;
-                document.getElementById('pomo-display').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-                if (pomoTimeLeft <= 0) { clearInterval(pomoInterval); alert("Focus block complete. Step away and hydrate."); pomoTimeLeft = pomoBaseMinutes * 60; document.getElementById('pomo-display').innerText = `${pomoBaseMinutes}:00`; pomoRunning = false; btn.innerText = "Focus"; }
+                pomoTimeLeft--; let mins = Math.floor(pomoTimeLeft / 60); let secs = pomoTimeLeft % 60; document.getElementById('pomo-display').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                if (pomoTimeLeft <= 0) { clearInterval(pomoInterval); alert("Focus block complete. Step away."); pomoTimeLeft = pomoBaseMinutes * 60; document.getElementById('pomo-display').innerText = `${pomoBaseMinutes}:00`; pomoRunning = false; btn.innerText = "Focus"; }
             }, 1000);
         }
     };
@@ -475,37 +541,28 @@
 
     let calDate = new Date();
     window.renderCalendar = () => {
-        const year = calDate.getFullYear(); const month = calDate.getMonth();
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        document.getElementById('cal-month-display').innerText = `${monthNames[month]} ${year}`;
+        const year = calDate.getFullYear(); const month = calDate.getMonth(); const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; document.getElementById('cal-month-display').innerText = `${monthNames[month]} ${year}`;
         const grid = document.getElementById('cal-grid'); Array.from(grid.querySelectorAll('.cal-day')).forEach(e => e.remove());
         const firstDay = new Date(year, month, 1).getDay(); const daysInMonth = new Date(year, month + 1, 0).getDate();
         for(let i=0; i<firstDay; i++) { const empty = document.createElement('div'); empty.className = 'cal-day empty'; grid.appendChild(empty); }
         const today = new Date();
-        for(let i=1; i<=daysInMonth; i++) {
-            const dayEl = document.createElement('div'); dayEl.className = 'cal-day'; dayEl.innerText = i;
-            if(year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) dayEl.classList.add('today');
-            dayEl.onclick = () => { window.promptAddEvent(year, month, i); }; grid.appendChild(dayEl);
-        }
+        for(let i=1; i<=daysInMonth; i++) { const dayEl = document.createElement('div'); dayEl.className = 'cal-day'; dayEl.innerText = i; if(year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) dayEl.classList.add('today'); dayEl.onclick = () => { window.promptAddEvent(year, month, i); }; grid.appendChild(dayEl); }
     };
     window.changeMonth = (dir) => { calDate.setMonth(calDate.getMonth() + dir); window.renderCalendar(); };
     window.promptAddEvent = (y, m, d) => { const title = prompt(`Add tracking deadline for ${d}/${m+1}/${y}:`); if(title) { const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; window.appState.userPrefs.events.push({ title, date: dateStr }); window.saveToCloud(); window.renderCountdowns(); } };
     window.renderCountdowns = () => {
-        const list = document.getElementById('countdown-list'); list.innerHTML = '';
-        if(!window.appState.userPrefs.events) window.appState.userPrefs.events = [];
-        window.appState.userPrefs.events.sort((a,b) => new Date(a.date) - new Date(b.date));
+        const list = document.getElementById('countdown-list'); list.innerHTML = ''; if(!window.appState.userPrefs.events) window.appState.userPrefs.events = []; window.appState.userPrefs.events.sort((a,b) => new Date(a.date) - new Date(b.date));
         const today = new Date(); today.setHours(0,0,0,0);
         window.appState.userPrefs.events.forEach((ev, idx) => {
-            const evDate = new Date(ev.date); const diffTime = evDate - today; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const diffDays = Math.ceil((new Date(ev.date) - today) / (1000 * 60 * 60 * 24));
             const div = document.createElement('div'); div.className = 'countdown-item';
-            div.innerHTML = `<div><div style="font-size:0.8rem; color:var(--text-muted);">${ev.date}</div><div>${ev.title}</div></div><div style="display:flex; align-items:center; gap:10px;"><div class="days-left">${diffDays >= 0 ? diffDays + ' Days' : 'Passed'}</div><button class="mini-btn" style="width:25px; height:25px; font-size:0.7rem; border-color:transparent;" onclick="window.delEvent(${idx})">✖</button></div>`; list.appendChild(div);
+            div.innerHTML = `<div><div style="font-size:0.8rem; opacity:0.8;">${ev.date}</div><div>${ev.title}</div></div><div style="display:flex; align-items:center; gap:10px;"><div class="days-left">${diffDays >= 0 ? diffDays + ' Days' : 'Passed'}</div><button class="mini-btn" style="width:25px; height:25px; font-size:0.7rem; border-color:transparent;" onclick="window.delEvent(${idx})">✖</button></div>`; list.appendChild(div);
         });
     };
     window.delEvent = async (idx) => { window.appState.userPrefs.events.splice(idx, 1); window.renderCountdowns(); await window.saveToCloud(); };
 
     window.renderProtocol = () => {
-        const list = document.getElementById('protocol-list'); list.innerHTML = '';
-        if(!window.appState.userPrefs.protocol) return;
+        const list = document.getElementById('protocol-list'); list.innerHTML = ''; if(!window.appState.userPrefs.protocol) return;
         window.appState.userPrefs.protocol.forEach((item, idx) => {
             const row = document.createElement('div'); row.className = `proto-item ${item.done ? 'done' : ''}`;
             const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = item.done; cb.onchange = async () => { item.done = cb.checked; window.renderProtocol(); await window.saveToCloud(); };
@@ -514,91 +571,70 @@
         });
     };
     
-    // --- HTML5 ANNOTATION CANVAS (DRAW OVER IMAGES) ---
+    // --- HTML5 ANNOTATION CANVAS ---
     let drawing = false; let ctxCanvas; let canvasBgImage = new Image();
     
     window.openWhiteboard = () => {
         document.getElementById('whiteboard-modal').style.display = 'flex';
-        const canvas = document.getElementById('whiteboard-canvas');
-        ctxCanvas = canvas.getContext('2d');
+        const canvas = document.getElementById('whiteboard-canvas'); ctxCanvas = canvas.getContext('2d');
         ctxCanvas.fillStyle = 'white'; ctxCanvas.fillRect(0, 0, canvas.width, canvas.height);
         ctxCanvas.lineWidth = 3; ctxCanvas.lineCap = 'round'; ctxCanvas.strokeStyle = 'red'; 
         
         canvas.onmousedown = (e) => { drawing = true; ctxCanvas.beginPath(); ctxCanvas.moveTo(e.offsetX, e.offsetY); };
         canvas.onmousemove = (e) => { if(drawing) { ctxCanvas.lineTo(e.offsetX, e.offsetY); ctxCanvas.stroke(); } };
-        canvas.onmouseup = () => { drawing = false; };
-        canvas.onmouseout = () => { drawing = false; };
+        canvas.onmouseup = () => { drawing = false; }; canvas.onmouseout = () => { drawing = false; };
     };
 
     window.loadCanvasBg = (e) => {
         const file = e.target.files[0]; if(!file) return;
-        const canvas = document.getElementById('whiteboard-canvas');
-        const reader = new FileReader();
+        const canvas = document.getElementById('whiteboard-canvas'); const reader = new FileReader();
         reader.onload = (event) => {
             canvasBgImage.onload = () => {
-                ctxCanvas.clearRect(0, 0, canvas.width, canvas.height);
-                ctxCanvas.fillStyle = 'white'; ctxCanvas.fillRect(0, 0, canvas.width, canvas.height);
+                ctxCanvas.clearRect(0, 0, canvas.width, canvas.height); ctxCanvas.fillStyle = 'white'; ctxCanvas.fillRect(0, 0, canvas.width, canvas.height);
                 let scale = Math.min(canvas.width / canvasBgImage.width, canvas.height / canvasBgImage.height);
                 let x = (canvas.width / 2) - (canvasBgImage.width / 2) * scale; let y = (canvas.height / 2) - (canvasBgImage.height / 2) * scale;
                 ctxCanvas.drawImage(canvasBgImage, x, y, canvasBgImage.width * scale, canvasBgImage.height * scale);
             };
             canvasBgImage.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
+        }; reader.readAsDataURL(file);
     };
 
-    window.saveWhiteboard = () => {
-        const dataUrl = document.getElementById('whiteboard-canvas').toDataURL("image/png");
-        document.getElementById('note-editor').focus(); document.execCommand('insertImage', false, dataUrl);
-        document.getElementById('whiteboard-modal').style.display = 'none'; window.saveToCloud();
-    };
+    window.saveWhiteboard = () => { const dataUrl = document.getElementById('whiteboard-canvas').toDataURL("image/png"); document.getElementById('note-editor').focus(); document.execCommand('insertImage', false, dataUrl); document.getElementById('whiteboard-modal').style.display = 'none'; window.saveToCloud(); };
 
-    // --- NEW STRICT SIDEBAR NAVIGATION ---
-    window.examCategories = [
-        '🧠 CSAT & Bank PO (Math/Reasoning)', 
-        '🏛️ UPSC CSE (General Studies)', 
-        '🏗️ UPSC ESE (Civil Engg)', 
-        '⚙️ UPSC ESE (Mechanical Engg)', 
-        '🏗️ SSC JE (Civil Engg)', 
-        '⚙️ SSC JE (Mechanical Engg)', 
-        '📜 MPSC State Services (GS)', 
-        '🏛️ Dept Exams (Civil Engg)',
-        '⚙️ Dept Exams (Mechanical Engg)'
-    ];
+    // --- NAVIGATION LOGIC ---
+    window.examCategories = ['🧠 CSAT & Bank PO (Math/Reasoning)', '🏛️ UPSC CSE (General Studies)', '🏗️ UPSC ESE (Civil Engg)', '⚙️ UPSC ESE (Mechanical Engg)', '🏗️ SSC JE (Civil Engg)', '⚙️ SSC JE (Mechanical Engg)', '📜 MPSC State Services (GS)', '🏛️ Dept Exams (Civil Engg)', '⚙️ Dept Exams (Mechanical Engg)'];
     window.activePYQCategory = window.examCategories[2];
 
     window.openPYQHub = () => {
-        ['folder-view', 'checklist-view', 'note-view'].forEach(id => document.getElementById(id).style.display = 'none');
-        document.getElementById('pyq-view').style.display = 'block';
+        ['folder-view', 'checklist-view', 'note-view', 'health-view'].forEach(id => document.getElementById(id).style.display = 'none'); document.getElementById('pyq-view').style.display = 'block';
         const list = document.getElementById('pyq-category-list'); list.innerHTML = '';
         window.examCategories.forEach(cat => {
-            const div = document.createElement('div'); 
-            div.className = `pyq-tab ${cat === window.activePYQCategory ? 'active' : ''}`;
-            if(cat.includes('🧠')) div.classList.add('special');
-            div.innerText = cat; div.onclick = () => { window.activePYQCategory = cat; window.openPYQHub(); };
-            list.appendChild(div);
-        });
-        document.getElementById('pyq-questions-container').innerHTML = '<div class="empty-state">Select "Refresh Random Set" or type a topic to generate AI questions.</div>';
+            const div = document.createElement('div'); div.className = `pyq-tab ${cat === window.activePYQCategory ? 'active' : ''}`; if(cat.includes('🧠')) div.classList.add('special');
+            div.innerText = cat; div.onclick = () => { window.activePYQCategory = cat; window.openPYQHub(); }; list.appendChild(div);
+        }); document.getElementById('pyq-questions-container').innerHTML = '<div class="empty-state">Select "Refresh Random Set" or type a topic to generate AI questions.</div>';
     };
 
-    window.toggleZenMode = () => { window.appState.isZenMode = !window.appState.isZenMode; if(window.appState.isZenMode) document.body.classList.add('zen-mode'); else document.body.classList.remove('zen-mode'); };
+    window.openHealthHub = () => { ['folder-view', 'checklist-view', 'note-view', 'pyq-view'].forEach(id => document.getElementById(id).style.display = 'none'); document.getElementById('health-view').style.display = 'block'; window.renderHealthHub(); };
+
+    window.toggleZenMode = () => { 
+        window.appState.isZenMode = !window.appState.isZenMode; 
+        if(window.appState.isZenMode) document.body.classList.add('zen-mode'); 
+        else document.body.classList.remove('zen-mode'); 
+        applyBackground(); // Re-trigger background/color logic
+    };
     window.toggleCommandCenter = () => { document.getElementById('command-center').classList.toggle('open'); };
     window.addEventListener('hashchange', () => { let hash = window.location.hash.replace('#', ''); window.appState.currentPath = hash ? hash.split('/') : []; if (window.appState.currentUser) { window.appState.userPrefs.lastPath = hash; window.saveToCloud(); window.renderOS(); } });
 
     function resolveCurrentContext() {
         if (window.appState.currentPath.length === 0) return { children: window.appState.tree, node: null };
         let currentArray = window.appState.tree; let targetNode = null;
-        for (let id of window.appState.currentPath) { targetNode = currentArray.find(n => n.id === id); if (!targetNode) { window.location.hash = ''; return { children: window.appState.tree, node: null }; } if (targetNode.type === "folder") currentArray = targetNode.children || []; }
-        return { children: currentArray, node: targetNode };
+        for (let id of window.appState.currentPath) { targetNode = currentArray.find(n => n.id === id); if (!targetNode) { window.location.hash = ''; return { children: window.appState.tree, node: null }; } if (targetNode.type === "folder") currentArray = targetNode.children || []; } return { children: currentArray, node: targetNode };
     }
-    function getProgress(node) {
-        let total = 0; let done = 0;
-        if (node.type === 'checklist') { total += (node.tasks || []).length; done += (node.tasks || []).filter(t => t.done).length; } else if (node.type === 'folder') { (node.children || []).forEach(child => { const p = getProgress(child); total += p.total; done += p.done; }); } return { total, done };
-    }
+    function getProgress(node) { let total = 0; let done = 0; if (node.type === 'checklist') { total += (node.tasks || []).length; done += (node.tasks || []).filter(t => t.done).length; } else if (node.type === 'folder') { (node.children || []).forEach(child => { const p = getProgress(child); total += p.total; done += p.done; }); } return { total, done }; }
 
     window.renderOS = () => {
         renderBreadcrumbs(); const ctx = resolveCurrentContext();
-        ['folder-view', 'checklist-view', 'note-view', 'pyq-view'].forEach(id => document.getElementById(id).style.display = 'none');
+        ['folder-view', 'checklist-view', 'note-view', 'pyq-view', 'health-view'].forEach(id => document.getElementById(id).style.display = 'none');
         if (!ctx.node || ctx.node.type === "folder") { document.getElementById('folder-view').style.display = 'block'; renderFolder(ctx.children); } 
         else if (ctx.node.type === "checklist") { document.getElementById('checklist-view').style.display = 'block'; renderChecklist(ctx.node); } 
         else if (ctx.node.type === "note") { document.getElementById('note-view').style.display = 'block'; renderNote(ctx.node); } 
@@ -606,45 +642,35 @@
 
     function renderBreadcrumbs() {
         const bc = document.getElementById('breadcrumbs'); bc.innerHTML = '';
-        const home = document.createElement('div'); home.className = `crumb ${window.appState.currentPath.length === 0 ? 'active' : ''}`;
-        home.innerHTML = '🏠 Workspace Root'; home.onclick = () => { window.location.hash = ''; window.renderOS();}; bc.appendChild(home);
+        const home = document.createElement('div'); home.className = `crumb ${window.appState.currentPath.length === 0 ? 'active' : ''}`; home.innerHTML = '🏠 Workspace Root'; home.onclick = () => { window.location.hash = ''; window.renderOS();}; bc.appendChild(home);
         let currentArray = window.appState.tree; let cumPath = [];
         for (let id of window.appState.currentPath) {
             const sep = document.createElement('span'); sep.className = 'crumb-separator'; sep.innerText = '/'; bc.appendChild(sep);
             const node = currentArray.find(n => n.id === id); if(!node) break;
-            cumPath.push(id); const cp = [...cumPath]; 
-            const crumb = document.createElement('div'); crumb.className = `crumb ${cumPath.length === window.appState.currentPath.length ? 'active' : ''}`;
-            crumb.innerHTML = `${node.icon} ${node.title}`; crumb.onclick = () => { window.location.hash = cp.join('/'); window.renderOS();};
-            bc.appendChild(crumb); if (node.type === "folder") currentArray = node.children || [];
+            cumPath.push(id); const cp = [...cumPath]; const crumb = document.createElement('div'); crumb.className = `crumb ${cumPath.length === window.appState.currentPath.length ? 'active' : ''}`; crumb.innerHTML = `${node.icon} ${node.title}`; crumb.onclick = () => { window.location.hash = cp.join('/'); window.renderOS();}; bc.appendChild(crumb); if (node.type === "folder") currentArray = node.children || [];
         }
     }
 
     function renderFolder(children) {
-        const grid = document.getElementById('folder-grid'); grid.innerHTML = '';
-        if (!children || children.length === 0) { grid.innerHTML = '<div class="empty-state">Workspace environment empty. Initialize elements below.</div>'; return; }
+        const grid = document.getElementById('folder-grid'); grid.innerHTML = ''; if (!children || children.length === 0) { grid.innerHTML = '<div class="empty-state">Workspace environment empty. Initialize elements below.</div>'; return; }
         children.forEach(item => {
-            const card = document.createElement('div'); card.className = 'card';
-            let badge = item.type; let imgHTML = ''; let progressHTML = '';
+            const card = document.createElement('div'); card.className = 'card'; let badge = item.type; let imgHTML = ''; let progressHTML = '';
             if (item.type === 'folder' || item.type === 'checklist') { const prog = getProgress(item); if(prog.total > 0) { const pct = Math.round((prog.done / prog.total) * 100); progressHTML = `<div class="progress-wrapper"><div class="progress-stats"><span>${prog.done}/${prog.total} items</span><span>${pct}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div></div>`; } }
-            if (item.type === 'image') { imgHTML = `<img src="${item.url}" class="card-image-bg">`; badge = 'Image'; }
-            if (item.type === 'link') badge = 'External Link';
+            if (item.type === 'image') { imgHTML = `<img src="${item.url}" class="card-image-bg">`; badge = 'Image'; } if (item.type === 'link') badge = 'External Link';
             card.innerHTML = `${imgHTML}<div class="card-header"><div class="card-icon">${item.icon}</div><div class="card-type-badge">${badge}</div></div><div class="card-title">${item.title}</div>${progressHTML}
                 <div class="card-actions"><button class="mini-btn" style="color:var(--accent);" onclick="event.stopPropagation(); window.openMoveModal('${item.id}')" title="Move/Copy">🔀</button><button class="mini-btn" onclick="event.stopPropagation(); window.openEditModal('${item.id}')" title="Edit">✏️</button><button class="mini-btn" style="color:#ef4444;" onclick="event.stopPropagation(); window.deleteNode('${item.id}')">🗑️</button></div>`;
-            card.onclick = () => { if(item.type === 'link' || item.type === 'image') window.open(item.url, '_blank'); else window.location.hash = [...window.appState.currentPath, item.id].join('/'); };
-            grid.appendChild(card);
+            card.onclick = () => { if(item.type === 'link' || item.type === 'image') window.open(item.url, '_blank'); else window.location.hash = [...window.appState.currentPath, item.id].join('/'); }; grid.appendChild(card);
         });
     }
 
     function renderChecklist(node) {
-        const todoList = document.getElementById('todo-list'); const completedList = document.getElementById('completed-list'); const compTitle = document.getElementById('completed-title');
-        todoList.innerHTML = ''; completedList.innerHTML = '';
+        const todoList = document.getElementById('todo-list'); const completedList = document.getElementById('completed-list'); const compTitle = document.getElementById('completed-title'); todoList.innerHTML = ''; completedList.innerHTML = '';
         const tasks = node.tasks || []; const todos = tasks.filter(t => !t.done); const doneTasks = tasks.filter(t => t.done);
         if (tasks.length === 0) todoList.innerHTML = '<div class="empty-state">No active topics.</div>'; else todos.forEach(task => todoList.appendChild(createTaskElement(task, node)));
         if (doneTasks.length === 0) compTitle.style.display = 'none'; else { compTitle.style.display = 'block'; doneTasks.forEach(task => completedList.appendChild(createTaskElement(task, node))); }
     }
     function createTaskElement(task, parentNode) {
-        const li = document.createElement('li'); li.className = `task-item ${task.done ? 'completed' : ''}`;
-        const content = document.createElement('div'); content.className = 'task-content';
+        const li = document.createElement('li'); li.className = `task-item ${task.done ? 'completed' : ''}`; const content = document.createElement('div'); content.className = 'task-content';
         const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = task.done; cb.onchange = async () => { task.done = !task.done; window.renderOS(); await window.saveToCloud(); };
         const span = document.createElement('span'); span.innerText = task.text; content.appendChild(cb); content.appendChild(span);
         const actions = document.createElement('div'); actions.className = 'task-actions';
@@ -655,8 +681,7 @@
 
     let editorTimeout = null;
     function renderNote(node) {
-        const editor = document.getElementById('note-editor');
-        if (document.activeElement !== editor) editor.innerHTML = node.content || "";
+        const editor = document.getElementById('note-editor'); if (document.activeElement !== editor) editor.innerHTML = node.content || "";
         editor.oninput = () => { node.content = editor.innerHTML; document.getElementById('save-indicator').innerText = "Typing..."; clearTimeout(editorTimeout); editorTimeout = setTimeout(async () => { await window.saveToCloud(); }, 1000); };
     }
 
@@ -676,78 +701,87 @@
         document.getElementById('custom-modal').style.display = 'flex';
     };
 
-    window.deleteNode = async (nodeId) => {
-        if(confirm("Permanently wipe this node and all deep contents?")) {
-            if (window.appState.currentPath.length === 0) { window.appState.tree = window.appState.tree.filter(n => n.id !== nodeId); } else { const ctx = resolveCurrentContext(); ctx.node.children = ctx.node.children.filter(n => n.id !== nodeId); } window.renderOS(); await window.saveToCloud();
-        }
-    };
+    window.deleteNode = async (nodeId) => { if(confirm("Permanently wipe this node?")) { if (window.appState.currentPath.length === 0) { window.appState.tree = window.appState.tree.filter(n => n.id !== nodeId); } else { const ctx = resolveCurrentContext(); ctx.node.children = ctx.node.children.filter(n => n.id !== nodeId); } window.renderOS(); await window.saveToCloud(); } };
     window.addChecklistItem = async () => { const text = prompt("Enter new syllabus topic:"); if (text && text.trim() !== "") { const ctx = resolveCurrentContext(); if(!ctx.node.tasks) ctx.node.tasks = []; ctx.node.tasks.push({ id: generateId(), text: text.trim(), done: false }); window.renderOS(); await window.saveToCloud(); } };
 
-    // MOVE / COPY LOGIC
     let nodeToMove = null;
     window.openMoveModal = (id) => {
-        const ctx = resolveCurrentContext(); nodeToMove = ctx.children.find(n => n.id === id); 
-        let sel = document.getElementById('move-target-select'); sel.innerHTML = '<option value="root">🏠 Workspace Root (Home)</option>';
-        function traverse(nodes, pathStr) { nodes.forEach(n => { if(n.type === 'folder' && n.id !== id) { let p = pathStr + ' / ' + n.title; sel.innerHTML += `<option value="${n.id}">${p}</option>`; if(n.children) traverse(n.children, p); } }); }
-        traverse(window.appState.tree, '🏠 Workspace'); document.getElementById('move-modal').style.display = 'flex';
+        const ctx = resolveCurrentContext(); nodeToMove = ctx.children.find(n => n.id === id); let sel = document.getElementById('move-target-select'); sel.innerHTML = '<option value="root">🏠 Workspace Root (Home)</option>';
+        function traverse(nodes, pathStr) { nodes.forEach(n => { if(n.type === 'folder' && n.id !== id) { let p = pathStr + ' / ' + n.title; sel.innerHTML += `<option value="${n.id}">${p}</option>`; if(n.children) traverse(n.children, p); } }); } traverse(window.appState.tree, '🏠 Workspace'); document.getElementById('move-modal').style.display = 'flex';
     };
     window.confirmMove = async (isCopy) => {
-        let targetId = document.getElementById('move-target-select').value; let clonedNode = JSON.parse(JSON.stringify(nodeToMove));
-        if (isCopy) regenerateIds(clonedNode);
+        let targetId = document.getElementById('move-target-select').value; let clonedNode = JSON.parse(JSON.stringify(nodeToMove)); if (isCopy) regenerateIds(clonedNode);
         if(!isCopy) { let ctx = resolveCurrentContext(); ctx.children = ctx.children.filter(n => n.id !== nodeToMove.id); if (window.appState.currentPath.length === 0) window.appState.tree = ctx.children; }
-        if(targetId === 'root') window.appState.tree.push(clonedNode);
-        else { let targetFolder = null; const findN = (nodes, id) => { for(let n of nodes){ if(n.id===id) return n; if(n.children){ let f = findN(n.children, id); if(f) return f; } } return null; }; targetFolder = findN(window.appState.tree, targetId); if(targetFolder) { if(!targetFolder.children) targetFolder.children = []; targetFolder.children.push(clonedNode); } }
+        if(targetId === 'root') window.appState.tree.push(clonedNode); else { let targetFolder = null; const findN = (nodes, id) => { for(let n of nodes){ if(n.id===id) return n; if(n.children){ let f = findN(n.children, id); if(f) return f; } } return null; }; targetFolder = findN(window.appState.tree, targetId); if(targetFolder) { if(!targetFolder.children) targetFolder.children = []; targetFolder.children.push(clonedNode); } }
         document.getElementById('move-modal').style.display='none'; window.renderOS(); await window.saveToCloud();
     };
     function regenerateIds(node) { node.id = generateId(); if(node.type === 'folder' && node.children) node.children.forEach(regenerateIds); if(node.type === 'checklist' && node.tasks) node.tasks.forEach(t => t.id = generateId()); }
 
-    window.handleImageUpload = async (e) => {
-        const file = e.target.files[0]; if (!file || !window.appState.currentUser) return;
-        try { const formData = new FormData(); formData.append("image", file); const response = await fetch(`https://api.imgbb.com/1/upload?key=${window.IMGBB_API_KEY}`, { method: "POST", body: formData }); const data = await response.json(); if (data.success) { const newNode = { id: generateId(), type: 'image', title: file.name, icon: '🖼️', url: data.data.url }; resolveCurrentContext().children.push(newNode); window.renderOS(); await window.saveToCloud(); } } catch(err) { alert("Image upload failed."); }
+    window.handleImageUpload = async (e) => { const file = e.target.files[0]; if (!file || !window.appState.currentUser) return; try { const formData = new FormData(); formData.append("image", file); const response = await fetch(`https://api.imgbb.com/1/upload?key=${window.IMGBB_API_KEY}`, { method: "POST", body: formData }); const data = await response.json(); if (data.success) { const newNode = { id: generateId(), type: 'image', title: file.name, icon: '🖼️', url: data.data.url }; resolveCurrentContext().children.push(newNode); window.renderOS(); await window.saveToCloud(); } } catch(err) { alert("Image upload failed."); } };
+    
+    // =========================================================================
+    // 🎨 DYNAMIC BACKGROUND & COLOR UPDATER
+    // =========================================================================
+    window.handleBgUpload = async (e) => { 
+        const file = e.target.files[0]; if (!file || !window.appState.currentUser) return; 
+        try { 
+            const formData = new FormData(); formData.append("image", file); 
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${window.IMGBB_API_KEY}`, { method: "POST", body: formData }); 
+            const data = await response.json(); 
+            if (data.success) { 
+                window.appState.userPrefs.bgUrl = data.data.url; 
+                applyBackground(); 
+                await window.saveToCloud(); 
+            } 
+        } catch(err) { alert("Background upload failed."); } 
     };
-    window.insertImageToNotes = async (e) => {
-        const file = e.target.files[0]; if(!file) return;
-        const reader = new FileReader(); reader.onload = (event) => { document.getElementById('note-editor').focus(); document.execCommand('insertImage', false, event.target.result); window.saveToCloud(); }; reader.readAsDataURL(file);
-    };
-
-    window.handleBgUpload = async (e) => {
-        const file = e.target.files[0]; if (!file || !window.appState.currentUser) return;
-        try { const formData = new FormData(); formData.append("image", file); const response = await fetch(`https://api.imgbb.com/1/upload?key=${window.IMGBB_API_KEY}`, { method: "POST", body: formData }); const data = await response.json(); if (data.success) { window.appState.userPrefs.bgUrl = data.data.url; applyBackground(); await window.saveToCloud(); } } catch(err) { alert("Background upload failed."); }
-    };
-    function applyBackground() { if(window.appState.userPrefs.bgUrl && !window.appState.isZenMode) document.getElementById('bg-layer').style.backgroundImage = `url(${window.appState.userPrefs.bgUrl})`; else if (!window.appState.isZenMode) document.getElementById('bg-layer').style.backgroundImage = ''; }
+    
+    function applyBackground() { 
+        if(window.appState.userPrefs.bgUrl && !window.appState.isZenMode) {
+            document.getElementById('bg-layer').style.backgroundImage = `url(${window.appState.userPrefs.bgUrl})`; 
+            window.applyDynamicContrast(window.appState.userPrefs.bgUrl);
+        } else if (!window.appState.isZenMode) {
+            document.getElementById('bg-layer').style.backgroundImage = ''; 
+            document.documentElement.style.removeProperty('--text-main'); // Reset to default
+        } else {
+            document.documentElement.style.removeProperty('--text-main');
+        }
+    }
+    
     window.promptBgChange = () => { if(window.appState.userPrefs.bgUrl && confirm("Clear current custom wallpaper?")) { window.appState.userPrefs.bgUrl = ''; applyBackground(); window.saveToCloud(); return; } document.getElementById('bg-upload').click(); };
     function generateId() { return Math.random().toString(36).substr(2, 9); }
 </script>
 
+<!-- AUTHENTICATION -->
 <div id="auth-screen">
-    <div class="modal-content" style="text-align: center;">
-        <h1 class="brand-title" style="font-size: 2.8rem; margin-bottom: 5px;">StudyFLOW</h1>
-        <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 1.1rem;">Engineering Your Success.</p>
+    <div class="glass-panel" style="padding: 40px; text-align: center; max-width: 400px; width: 90%;">
+        <h1 class="brand-title" style="font-size: 3rem; margin-bottom: 5px;">FLOW</h1>
+        <p style="opacity: 0.8; margin-bottom: 30px; font-size: 1.1rem;">Engineering Your Success.</p>
         <div id="auth-error" style="color: #ef4444; font-weight: 600; margin-bottom: 15px; min-height: 20px;"></div>
-        <input type="email" id="auth-email" class="modal-input" placeholder="Email address">
-        <input type="password" id="auth-password" class="modal-input" placeholder="Password">
+        <input type="email" id="auth-email" class="modal-input" placeholder="Email address" style="background: rgba(255,255,255,0.5); color: #1d1d1f;">
+        <input type="password" id="auth-password" class="modal-input" placeholder="Password" style="background: rgba(255,255,255,0.5); color: #1d1d1f;">
         <button class="action-btn" style="width:100%; margin-bottom: 15px;" id="auth-action-btn" onclick="window.handleAuth()">Login Workspace</button>
         <p style="color: var(--accent); font-weight: 600; cursor: pointer;" onclick="window.toggleAuthMode()" id="auth-switch-text">Need an account? Sign up</p>
     </div>
 </div>
 
 <div id="motivational-modal" class="modal-overlay">
-    <div class="modal-content" style="text-align: center;">
-        <div style="font-size: 1.8rem; font-weight: 300; font-style: italic; line-height: 1.4; color: var(--text-main); margin-bottom: 30px;" id="quote-display">Initializing Groq...</div>
+    <div class="modal-content glass-panel" style="text-align: center;">
+        <div style="font-size: 1.8rem; font-weight: 300; font-style: italic; line-height: 1.4; margin-bottom: 30px;" id="quote-display">Initializing OS...</div>
         <div style="font-size: 1rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 2px;" id="author-display"></div>
-        <button class="action-btn" style="width:100%; margin-top: 30px;" onclick="document.getElementById('motivational-modal').style.display='none'">Initialize Workspace</button>
+        <button class="action-btn" style="width:100%; margin-top: 30px;" onclick="document.getElementById('motivational-modal').style.display='none'">Engage Flow State</button>
     </div>
 </div>
 
 <!-- WHITEBOARD MODAL (ANNOTATION) -->
 <div id="whiteboard-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 850px; padding: 20px;">
+    <div class="modal-content glass-panel" style="max-width: 850px; padding: 20px;">
         <div style="display:flex; justify-content:space-between; margin-bottom: 15px; align-items:center;">
             <h3 style="margin:0;">Annotation Canvas</h3>
             <button class="mini-btn" onclick="document.getElementById('whiteboard-modal').style.display='none'">✖</button>
         </div>
         <div style="margin-bottom: 15px; display: flex; gap: 10px;">
-            <button class="action-btn" style="font-size: 0.9rem; padding: 8px 15px; background:var(--bg-color); color:var(--text-main); border:1px solid var(--glass-border);" onclick="document.getElementById('canvas-bg-upload').click()">📂 Load Image to Canvas</button>
+            <button class="action-btn" style="font-size: 0.9rem; padding: 8px 15px; background:var(--bg-color); color:#1d1d1f; border:1px solid var(--glass-border);" onclick="document.getElementById('canvas-bg-upload').click()">📂 Load Image to Canvas</button>
             <input type="file" id="canvas-bg-upload" accept="image/*" onchange="window.loadCanvasBg(event)" style="display:none;">
             <input type="color" class="color-picker" onchange="ctxCanvas.strokeStyle = this.value" title="Pen Color" value="#ff0000">
         </div>
@@ -756,15 +790,17 @@
     </div>
 </div>
 
+<!-- MAIN OS APPLICATION -->
 <div id="app-screen">
     <div class="container" id="main-container">
         
         <div class="master-header">
             <div class="brand-container">
-                <h1 class="brand-title" onclick="window.location.hash=''; window.renderOS();">StudyFLOW</h1>
-                <div class="user-welcome" id="user-welcome">Welcome back</div>
+                <h1 class="brand-title" onclick="window.location.hash=''; window.renderOS();">FLOW</h1>
+                <div class="user-welcome" id="user-welcome">Siddhant | UPSC CSE 2026</div>
             </div>
             <div class="header-controls">
+                <button class="action-btn health-tab-btn" style="padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; min-width: auto;" onclick="window.openHealthHub()">🍎 Health & Diet Hub</button>
                 <button class="action-btn ai-btn" style="padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; min-width: auto;" onclick="window.openPYQHub()">🧠 AI PYQ Engine</button>
                 <div class="pomo-widget"><span class="pomo-settings" onclick="window.setCustomPomo()" title="Change Time">⚙️</span><span id="pomo-display">50:00</span><button class="pomo-btn" id="pomo-trigger" onclick="window.togglePomo()">Focus</button></div>
                 <div id="cloud-indicator" class="cloud-status offline">Connecting...</div>
@@ -779,25 +815,31 @@
 
         <div class="breadcrumbs-wrapper"><div class="breadcrumbs" id="breadcrumbs"></div></div>
 
+        <!-- FOLDER OS VIEW -->
         <div id="folder-view">
             <div class="grid" id="folder-grid"></div>
             <div style="display:flex; gap:15px; justify-content: center; margin-top:20px;">
                 <button class="action-btn" style="max-width: 300px;" onclick="window.promptNewItem()">+ Create Element</button>
-                <button class="action-btn" style="max-width: 300px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--glass-border);" onclick="document.getElementById('image-upload').click()">🖼️ Upload Image</button>
+                <button class="action-btn" style="max-width: 300px; background: rgba(255,255,255,0.4); border: 1px solid var(--glass-border);" onclick="document.getElementById('image-upload').click()">🖼️ Upload Image</button>
                 <input type="file" id="image-upload" accept="image/*" onchange="window.handleImageUpload(event)" style="display:none;">
             </div>
         </div>
 
+        <!-- CHECKLIST VIEW -->
         <div id="checklist-view">
             <ul id="todo-list" class="task-list" style="margin-bottom: 25px;"></ul>
-            <h3 id="completed-title" style="font-size:1.1rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom: 15px; display: none;">Conquered</h3>
+            <h3 id="completed-title" style="font-size:1.1rem; opacity:0.8; text-transform:uppercase; letter-spacing:1px; margin-bottom: 15px; display: none;">Conquered</h3>
             <ul id="completed-list" class="task-list"></ul>
-            <div style="display:flex; gap:15px; margin-top:20px;"><button class="action-btn" style="max-width: 200px;" onclick="window.addChecklistItem()">+ Add Topic</button></div>
+            <div style="display:flex; gap:15px; margin-top:20px;">
+                <button class="action-btn" style="max-width: 200px;" onclick="window.addChecklistItem()">+ Add Topic</button>
+                <button class="action-btn" style="max-width: 250px; background: rgba(255,255,255,0.4); border: 1px solid var(--glass-border);" onclick="document.getElementById('checklist-ocr-upload').click()">📷 Scan Checklist (OCR)</button>
+                <input type="file" id="checklist-ocr-upload" accept="image/*" onchange="window.runChecklistOCR(event)" style="display:none;">
+            </div>
         </div>
 
+        <!-- WORKBENCH (NOTES) VIEW -->
         <div id="note-view">
             <div class="workbench-layout">
-                <!-- SINGLE FULL WIDTH EDITOR -->
                 <div class="workbench-panel" id="editor-panel">
                     <div class="editor-toolbar">
                         <button class="editor-btn" onclick="document.execCommand('bold')">B</button>
@@ -813,32 +855,95 @@
                         <button class="editor-btn" onclick="document.getElementById('editor-img-upload').click()">🖼️ Insert Pic</button>
                         <input type="file" id="editor-img-upload" accept="image/*" onchange="window.insertImageToNotes(event)" style="display:none;">
                         <button class="editor-btn" onclick="window.openWhiteboard()">🖌️ Draw / Annotate</button>
+                        <button class="editor-btn" onclick="document.getElementById('ocr-upload').click()" style="color:var(--accent);">📷 Scan Text (OCR)</button>
+                        <input type="file" id="ocr-upload" accept="image/*" onchange="window.runNoteOCR(event)" style="display:none;">
                     </div>
                     <div id="note-editor" class="rich-editor" contenteditable="true" placeholder="Begin deep work here..."></div>
-                    <div id="save-indicator" style="text-align: right; font-size: 0.9rem; color: var(--text-muted); margin-top: 10px; font-weight: 600;">Cloud synced</div>
+                    <div id="save-indicator" style="text-align: right; font-size: 0.9rem; opacity:0.8; margin-top: 10px; font-weight: 600;">Cloud synced</div>
                 </div>
             </div>
         </div>
 
+        <!-- PYQ ENGINE HUB -->
         <div id="pyq-view">
             <div style="width:100%;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h2 style="margin:0; font-size: 1.8rem;">Groq Llama 3 PYQ Generator</h2>
-                    <button class="action-btn" style="max-width: 150px; padding: 10px; border-radius: 12px; font-size: 0.95rem; background: var(--glass-bg); color: var(--text-main); border: 1px solid var(--glass-border);" onclick="window.location.hash=''; window.renderOS();">Exit Hub</button>
+                    <h2 style="margin:0; font-size: 1.8rem;">Llama 3.1 PYQ Engine</h2>
+                    <button class="action-btn" style="max-width: 150px; padding: 10px; border-radius: 12px; font-size: 0.95rem; background: var(--glass-bg); border: 1px solid var(--glass-border);" onclick="window.location.hash=''; window.renderOS();">Exit Hub</button>
                 </div>
-                <div class="pyq-container">
+                <div class="pyq-container glass-panel">
                     <div class="pyq-sidebar" id="pyq-category-list"></div>
                     <div class="pyq-content">
-                        <div class="ai-command-bar">
+                        <div class="ai-command-bar glass-panel">
                             <div class="quiz-toggle-container">
                                 <input type="checkbox" id="quiz-mode-toggle" onchange="window.handleQuizModeToggle()">
                                 <label for="quiz-mode-toggle">⏱️ Quiz Mode</label>
                             </div>
-                            <input type="text" id="ai-custom-topic" class="ai-input" placeholder="Specific Topic (e.g. Fluid Mechanics, Time & Work)...">
+                            <input type="text" id="ai-custom-topic" class="ai-input" placeholder="Specific Topic (e.g. Surveying, Time & Work)..." style="background: rgba(255,255,255,0.5);">
                             <button class="action-btn ai-btn" style="flex:none; min-width:150px;" onclick="window.generateAIQuestions()">Generate Custom</button>
-                            <button class="action-btn" style="flex:none; background:var(--bg-color); color:var(--text-main); border:1px solid var(--glass-border);" onclick="document.getElementById('ai-custom-topic').value=''; window.generateAIQuestions()">Refresh Random Set</button>
+                            <button class="action-btn" style="flex:none; background:rgba(255,255,255,0.4); border:1px solid var(--glass-border);" onclick="document.getElementById('ai-custom-topic').value=''; window.generateAIQuestions()">Refresh Random Set</button>
                         </div>
                         <div id="pyq-questions-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- HEALTH & DIET HUB -->
+        <div id="health-view">
+            <div style="width:100%;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h2 style="margin:0; font-size: 1.8rem;">🍎 Health & Diet Hub</h2>
+                    <button class="action-btn" style="max-width: 150px; padding: 10px; border-radius: 12px; font-size: 0.95rem; background: var(--glass-bg); border: 1px solid var(--glass-border);" onclick="window.location.hash=''; window.renderOS();">Exit Hub</button>
+                </div>
+                
+                <div class="health-grid">
+                    <div class="health-card">
+                        <h3 style="margin-top:0;">Daily Macro Tracker</h3>
+                        
+                        <div class="macro-bar-container">
+                            <div class="macro-label"><span>🔥 Calories (kcal)</span><span id="macro-cal-text">0 / 2000</span></div>
+                            <div class="progress-track"><div class="progress-fill" id="macro-cal-fill" style="width:0%;"></div></div>
+                        </div>
+                        <div class="macro-bar-container">
+                            <div class="macro-label"><span>🍗 Protein (g)</span><span id="macro-p-text">0 / 140</span></div>
+                            <div class="progress-track"><div class="progress-fill" id="macro-p-fill" style="width:0%;"></div></div>
+                        </div>
+                        <div class="macro-bar-container">
+                            <div class="macro-label"><span>🍚 Carbs (g)</span><span id="macro-c-text">0 / 200</span></div>
+                            <div class="progress-track"><div class="progress-fill" id="macro-c-fill" style="width:0%;"></div></div>
+                        </div>
+                        <div class="macro-bar-container">
+                            <div class="macro-label"><span>🥑 Fats (g)</span><span id="macro-f-text">0 / 65</span></div>
+                            <div class="progress-track"><div class="progress-fill" id="macro-f-fill" style="width:0%;"></div></div>
+                        </div>
+
+                        <div style="display:flex; gap:10px; margin-top:20px;">
+                            <input type="text" id="food-input" class="health-input" placeholder="E.g., 2 eggs and 100g chicken..." style="background: rgba(255,255,255,0.5); margin-bottom:0;">
+                            <button class="health-btn" style="flex:none; width:auto; background:var(--text-main); color:var(--bg-color);" onclick="window.logFoodAI()">Log AI</button>
+                        </div>
+                        
+                        <h4 style="margin:20px 0 10px 0;">Today's Log:</h4>
+                        <div id="food-logs" style="max-height: 150px; overflow-y:auto; background: rgba(0,0,0,0.05); border-radius: 12px; border: 1px solid var(--glass-border);"></div>
+                        <button class="mini-btn" style="margin-top:10px; width:auto; padding:5px 15px; border-radius:10px;" onclick="window.clearHealthLogs()">Clear Log</button>
+                    </div>
+
+                    <div style="display:flex; flex-direction: column; gap: 20px;">
+                        <div class="health-card">
+                            <h3 style="margin-top:0;">BMI & TDEE Calculator</h3>
+                            <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                                <input type="number" id="weight-input" class="health-input" placeholder="Weight (kg)" style="background: rgba(255,255,255,0.5); margin-bottom:0;">
+                                <input type="number" id="height-input" class="health-input" placeholder="Height (cm)" style="background: rgba(255,255,255,0.5); margin-bottom:0;">
+                            </div>
+                            <button class="health-btn" style="background: rgba(255,255,255,0.4); border: 1px solid var(--glass-border); padding: 10px;" onclick="window.calculateBMI()">Calculate Metrics</button>
+                            <div id="bmi-result" style="margin-top: 15px; font-size: 1.1rem; line-height: 1.5;"></div>
+                        </div>
+
+                        <div class="health-card" style="flex:1;">
+                            <h3 style="margin-top:0;">AI Diet Planner</h3>
+                            <button class="health-btn health-tab-btn" onclick="window.generateDietPlan()">Generate Weight Loss Plan (Indian)</button>
+                            <div id="diet-plan-result" style="margin-top: 20px; font-size: 1rem; line-height: 1.6; max-height: 250px; overflow-y:auto;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -848,44 +953,43 @@
 </div>
 
 <!-- COMMAND CENTER SIDEBAR -->
-<div id="command-center">
+<div id="command-center" class="glass-panel" style="border-radius:0;">
     <div class="cc-header">
         <h2 style="margin:0; font-size:1.5rem;">Command Center</h2>
         <button class="icon-btn-header" onclick="window.toggleCommandCenter()">✖</button>
     </div>
     
-    <div style="background: var(--bg-color); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; margin-bottom: 25px;">
+    <div class="glass-panel" style="padding: 20px; margin-bottom: 25px;">
         <div class="cal-controls"><button onclick="window.changeMonth(-1)">❮</button><span id="cal-month-display">July 2026</span><button onclick="window.changeMonth(1)">❯</button></div>
         <div class="calendar-grid"><div class="cal-head">Sun</div><div class="cal-head">Mon</div><div class="cal-head">Tue</div><div class="cal-head">Wed</div><div class="cal-head">Thu</div><div class="cal-head">Fri</div><div class="cal-head">Sat</div></div>
         <div class="calendar-grid" id="cal-grid"></div>
-        <p style="text-align:center; margin: 10px 0 0 0; font-size:0.8rem; color:var(--text-muted); font-style:italic;">Click any day to add a deadline.</p>
+        <p style="text-align:center; margin: 10px 0 0 0; font-size:0.8rem; opacity:0.8; font-style:italic;">Click any day to add a deadline.</p>
     </div>
     
-    <h4 style="margin: 0 0 15px 0; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Active Deadlines</h4>
+    <h4 style="margin: 0 0 15px 0; opacity:0.8; text-transform: uppercase; letter-spacing: 1px;">Active Deadlines</h4>
     <div class="countdown-list" id="countdown-list"></div>
     
-    <h4 style="margin: 20px 0 15px 0; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Daily Protocol</h4>
+    <h4 style="margin: 20px 0 15px 0; opacity:0.8; text-transform: uppercase; letter-spacing: 1px;">Daily Protocol</h4>
     <div class="protocol-list" id="protocol-list"></div>
 </div>
 
 <div id="custom-modal" class="modal-overlay">
-    <div class="modal-content">
+    <div class="modal-content glass-panel">
         <h3 class="modal-title" id="modal-title">Create Element</h3>
-        <select id="modal-type" class="modal-input"><option value="folder">📁 Infinite Folder</option><option value="checklist">☑️ Dynamic Syllabus Checklist</option><option value="note">📝 Deep Work Note / Workbench</option></select>
-        <input type="text" id="modal-icon" class="modal-input" placeholder="Emoji (e.g., 🚀)" maxlength="5">
-        <input type="text" id="modal-name" class="modal-input" placeholder="Title / Core Concept">
-        <div class="modal-btns"><button class="modal-btn cancel" onclick="document.getElementById('custom-modal').style.display='none'">Cancel</button><button class="action-btn" style="flex:1; border-radius:14px; padding:15px;" id="modal-confirm-btn">Commit to Cloud</button></div>
+        <select id="modal-type" class="modal-input" style="background: rgba(255,255,255,0.5);"><option value="folder">📁 Infinite Folder</option><option value="checklist">☑️ Dynamic Syllabus Checklist</option><option value="note">📝 Deep Work Note / Workbench</option></select>
+        <input type="text" id="modal-icon" class="modal-input" placeholder="Emoji (e.g., 🚀)" maxlength="5" style="background: rgba(255,255,255,0.5);">
+        <input type="text" id="modal-name" class="modal-input" placeholder="Title / Core Concept" style="background: rgba(255,255,255,0.5);">
+        <div class="modal-btns"><button class="modal-btn cancel" style="background: rgba(255,255,255,0.5);" onclick="document.getElementById('custom-modal').style.display='none'">Cancel</button><button class="action-btn" style="flex:1; border-radius:14px; padding:15px; background:var(--text-main); color:var(--bg-color);" id="modal-confirm-btn">Commit to Cloud</button></div>
     </div>
 </div>
 
 <div id="move-modal" class="modal-overlay">
-    <div class="modal-content">
+    <div class="modal-content glass-panel">
         <h3 class="modal-title">Route Element</h3>
-        <select id="move-target-select" class="modal-input"></select>
-        <div class="modal-btns"><button class="modal-btn cancel" onclick="document.getElementById('move-modal').style.display='none'">Cancel</button><button class="modal-btn secondary" onclick="window.confirmMove(true)">Copy Here</button><button class="modal-btn confirm" onclick="window.confirmMove(false)">Move Here</button></div>
+        <select id="move-target-select" class="modal-input" style="background: rgba(255,255,255,0.5);"></select>
+        <div class="modal-btns"><button class="modal-btn cancel" style="background: rgba(255,255,255,0.5);" onclick="document.getElementById('move-modal').style.display='none'">Cancel</button><button class="modal-btn secondary" onclick="window.confirmMove(true)">Copy Here</button><button class="modal-btn confirm" style="background:var(--text-main); color:var(--bg-color);" onclick="window.confirmMove(false)">Move Here</button></div>
     </div>
 </div>
 
 </body>
 </html>
-
