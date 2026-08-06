@@ -26,6 +26,37 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* AI SPARK LOGO ANIMATION */
+.brand-container { display: flex; align-items: center; gap: 12px; }
+.ai-spark-logo {
+    width: 36px; height: 36px;
+    animation: spin-pulse 4s infinite linear;
+    filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.5));
+    cursor: pointer;
+}
+@keyframes spin-pulse {
+    0% { transform: rotate(0deg) scale(1); filter: drop-shadow(0 0 8px #2563eb); }
+    50% { transform: rotate(180deg) scale(1.15); filter: drop-shadow(0 0 18px #ec4899); }
+    100% { transform: rotate(360deg) scale(1); filter: drop-shadow(0 0 8px #2563eb); }
+}
+<div class="brand-container">
+    <!-- GEMINI-STYLE AI SPARK SVG -->
+    <svg class="ai-spark-logo" onclick="window.location.hash=''; window.renderOS();" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="spark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#2563eb" />
+                <stop offset="50%" stop-color="#8b5cf6" />
+                <stop offset="100%" stop-color="#ec4899" />
+            </linearGradient>
+        </defs>
+        <path d="M12 0C12 5.5 17.5 12 24 12C17.5 12 12 18.5 12 24C12 18.5 6.5 12 0 12C6.5 12 12 5.5 12 0Z" fill="url(#spark-grad)"/>
+    </svg>
+    <div>
+        <h1 class="brand-title" onclick="window.location.hash=''; window.renderOS();">FLOW</h1>
+        <div class="user-welcome" id="user-welcome">Siddhant | UPSC CSE 2026</div>
+    </div>
+</div>
         
         /* HARDWARE ACCELERATED BACKGROUND */
         #bg-layer {
